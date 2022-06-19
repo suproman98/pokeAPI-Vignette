@@ -1,0 +1,151 @@
+---
+title: "Becoming the Very Best API: Contacting the pokeAPI"
+author: "Supro Debnath"
+date: '2022-06-18'
+---
+
+This vignette is a step-by-step guide to interacting with the [pokeAPI](https://pokeapi.co/docs/v2#info). There are a few functions in here that explore the data present, as well as some visualizations that highlight interesting patterns in the world of pokemon. Most of the ids are represented as numeric (i.e. `Generation 1` referring to the Kanto pokemon, or `Version 8` referring to the Hoenn region). For that reason, if you intend on using any of these functions, please be mindful of how the function inputs correspond to the data you are trying to pull. 
+
+## Requirements
+
+To interact with this API, a few packages must be installed. 
++ `jsonlite`: Works with JSON in R and is useful for parsing data and interacting with a web API.
++ `httr`: Provides useful tools for working with HTTP.
++ `tidyverse`: Collection of R packages that contribute heavily to API interaction and data visualization.
++ `knitr`: Provides tools for dynamic reporting in R.
++ `dplyr`: Package that provides tools for working with data frames.
++ `ggplot2`: Powerful for complex data visualizations.
+
+
+```{r}
+library(jsonlite)
+library(httr)
+library(tidyverse)
+library(knitr)
+library(dplyr)
+library(ggplot2)
+```
+
+## pokeAPI Functions
+
+This section is dedicated to the functions I've created to pull data from this API. 
+
+
+
+### `Game Version`
+
+This function pulls the relevant version information of any existing game from the `version` endpoint. It returns a `tibble` listing the name of the game, the region, and which generation it falls into. It takes a numeric input from `1` to `34`, which is the order of each game being introduced.
+```{r}
+version <- function(game) {
+  # Checks if a valid input has been entered into the function.
+  if ((game > 34) || (game < 1)) {
+    stop("This is an invalid game. Please refine search.")
+  }
+  
+  #Set URL for the version endpoint in the API.
+  respGAME <- GET(paste0("http://pokeapi.co/api/v2/version/", game))
+  conGAME <- content(respGAME)
+  ver <- conGAME$version_group$url %>% GET() %>% content()
+  
+  #Create a tibble that prints basic version information based on the function input.
+  output <- tibble(
+    name = ver$name,
+    region = ifelse(is_empty(ver$region), NA, ver$regions[[1]]$name),
+    generation = ver$generation$name
+  )
+  return(output)
+}
+```
+
+
+
+### `Generation Pokedex`
+
+This function returns a complete pokedex from the `generation` endpoint. It returns a `data.frame` of pokemon found in that generation, listing their `name`, `id`, `typing` (i.e. fighting type or bug/flying type), `ability` (returning the primary ability, not all pokemon have hidden abilities), and their `stats` (attack, speed, etc.). It takes a numeric input from `1` to `8`, which is the order of each generation being introduced. 
+```{r}
+gendex <- function(gen) {
+  if ((gen > 8) || (gen < 1)) {
+    stop("This is a non-existent generation. Please refine search or submit a numeric input.")
+  }
+  
+  respGEN <- GET(paste0("http://pokeapi.co/api/v2/generation/", gen))
+  conGEN <- content(respGEN, "parsed")
+  df_pokeGEN <- do.call(rbind.data.frame, c(conGEN$pokemon_species, stringsAsFactors = FALSE))
+  
+  
+  pokePULL <- function(url) {
+    specCON <- content(GET(url), "parsed")
+    pokeURL <- specCON$varieties[[1]]$pokemon$url
+    pokeCON <- content(GET(pokeURL), "parsed")
+    stats <-
+      sapply(pokeCON$stats, function(stats)
+        stats[["base_stat"]])
+    names(stats) <-
+      sapply(pokeCON$stats, function(stats)
+        stats[["stat"]][["name"]])
+    
+    for (i in seq_along(pokeCON$types)) {
+      if (pokeCON$types[[i]][["slot"]] == 1){
+        type <- pokeCON$types[[1]][["type"]][["name"]]
+      }
+      else {
+        type <- paste0(pokeCON$types[[1]][["type"]][["name"]], "/",      
+                       pokeCON$types[[2]][["type"]][["name"]])
+      }
+    }
+    
+    for (i in seq_along(pokeCON$abilities)) {
+      if (pokeCON$abilities[[i]][["slot"]] == 1) {
+        ability <- pokeCON$abilities[[1]][["ability"]][["name"]]
+      } 
+    }
+    
+    return(
+      c(
+        name = pokeCON$name,
+        pokedex_id = pokeCON$id,
+        type = type,
+        ability = ability,
+        as.list(stats)
+      )
+    )
+  }
+  
+  pokeLIST <- lapply(df_pokeGEN$url, pokePULL)
+  pokedex <- do.call(rbind.data.frame, c(pokeLIST, stringsAsFactors = FALSE))
+  pokedex <- pokedex %>% arrange(pokedex_id)
+  return(pokedex)
+}
+```
+
+```{r}
+gendex(2)
+```
+
+
+
+### `Wrapper Function`
+```{r}
+pokeAPI <- function(func, ...) {
+  ###
+  # This function is a wrapper for the other functions. It takes in the name
+  # of the function to use as a character and any additional arguments for that
+  # function.
+  ###
+  
+  # Find and call the appropriate function using conditional logic.
+  
+  if (func == "version") {
+    output <- version(...)
+  }
+  else if (func == "gendex") {
+    output <- gendex(...)
+  }
+  else {
+    stop("ERROR: Argument for func is not valid!")
+  }
+  # Return the output from the appropriate function.
+  return(output)
+}
+```
+

@@ -609,7 +609,7 @@ Very Best API: Contacting the pokeAPI</h1>
 <ul>
 <li><a href="#game-version"><code>Game Version</code></a></li>
 <li><a href="#generation-pokedex"><code>Generation Pokedex</code></a></li>
-<li><a href="#game-version-1"><code>Game Version</code></a></li>
+<li><a href="#typedex"><code>TypeDex</code></a></li>
 <li><a href="#pokeapi-wrapper-function"><code>pokeAPI Wrapper Function</code></a></li>
 </ul></li>
 </ul>
@@ -666,11 +666,6 @@ introduced.</p>
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(output)</span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">version</span>(<span class="dv">8</span>)</span></code></pre></div>
-<pre><code>## # A tibble: 1 × 3
-##   name          region generation    
-##   &lt;chr&gt;         &lt;chr&gt;  &lt;chr&gt;         
-## 1 ruby-sapphire hoenn  generation-iii</code></pre>
 <h3 id="generation-pokedex"><code>Generation Pokedex</code></h3>
 <p>This function returns a complete pokedex from the
 <code>generation</code> endpoint. It returns a <code>data.frame</code>
@@ -681,264 +676,61 @@ pokemon have hidden abilities), and their <code>stats</code> (attack,
 speed, etc.). This function takes a numeric input from <code>1</code> to
 <code>8</code>, which is the order of each generation being
 introduced.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>gendex <span class="ot">&lt;-</span> <span class="cf">function</span>(gen) {</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> ((gen <span class="sc">&gt;</span> <span class="dv">8</span>) <span class="sc">||</span> (gen <span class="sc">&lt;</span> <span class="dv">1</span>)) {</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;This is a non-existent generation. Please refine search or submit a numeric input from 1 to 8.&quot;</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  respGEN <span class="ot">&lt;-</span> <span class="fu">GET</span>(<span class="fu">paste0</span>(<span class="st">&quot;http://pokeapi.co/api/v2/generation/&quot;</span>, gen))</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  conGEN <span class="ot">&lt;-</span> <span class="fu">content</span>(respGEN, <span class="st">&quot;parsed&quot;</span>)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  df_pokeGEN <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(conGEN<span class="sc">$</span>pokemon_species, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  pokePULL <span class="ot">&lt;-</span> <span class="cf">function</span>(url) {</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    specCON <span class="ot">&lt;-</span> <span class="fu">content</span>(<span class="fu">GET</span>(url), <span class="st">&quot;parsed&quot;</span>)</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    pokeURL <span class="ot">&lt;-</span> specCON<span class="sc">$</span>varieties[[<span class="dv">1</span>]]<span class="sc">$</span>pokemon<span class="sc">$</span>url</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    pokeCON <span class="ot">&lt;-</span> <span class="fu">content</span>(<span class="fu">GET</span>(pokeURL), <span class="st">&quot;parsed&quot;</span>)</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    stats <span class="ot">&lt;-</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sapply</span>(pokeCON<span class="sc">$</span>stats, <span class="cf">function</span>(stats)</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        stats[[<span class="st">&quot;base_stat&quot;</span>]])</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(stats) <span class="ot">&lt;-</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sapply</span>(pokeCON<span class="sc">$</span>stats, <span class="cf">function</span>(stats)</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        stats[[<span class="st">&quot;stat&quot;</span>]][[<span class="st">&quot;name&quot;</span>]])</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(pokeCON<span class="sc">$</span>types)) {</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (pokeCON<span class="sc">$</span>types[[i]][[<span class="st">&quot;slot&quot;</span>]] <span class="sc">==</span> <span class="dv">1</span>){</span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        type <span class="ot">&lt;-</span> pokeCON<span class="sc">$</span>types[[<span class="dv">1</span>]][[<span class="st">&quot;type&quot;</span>]][[<span class="st">&quot;name&quot;</span>]]</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span> {</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        type <span class="ot">&lt;-</span> <span class="fu">paste0</span>(pokeCON<span class="sc">$</span>types[[<span class="dv">1</span>]][[<span class="st">&quot;type&quot;</span>]][[<span class="st">&quot;name&quot;</span>]], <span class="st">&quot;/&quot;</span>,      </span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>                       pokeCON<span class="sc">$</span>types[[<span class="dv">2</span>]][[<span class="st">&quot;type&quot;</span>]][[<span class="st">&quot;name&quot;</span>]])</span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(pokeCON<span class="sc">$</span>abilities)) {</span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (pokeCON<span class="sc">$</span>abilities[[i]][[<span class="st">&quot;slot&quot;</span>]] <span class="sc">==</span> <span class="dv">1</span>) {</span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        ability <span class="ot">&lt;-</span> pokeCON<span class="sc">$</span>abilities[[<span class="dv">1</span>]][[<span class="st">&quot;ability&quot;</span>]][[<span class="st">&quot;name&quot;</span>]]</span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>      } </span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>      <span class="fu">c</span>(</span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        <span class="at">name =</span> pokeCON<span class="sc">$</span>name,</span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        <span class="at">pokedex_id =</span> pokeCON<span class="sc">$</span>id,</span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>        <span class="at">type =</span> type,</span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        <span class="at">ability =</span> ability,</span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.list</span>(stats)</span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>  pokeLIST <span class="ot">&lt;-</span> <span class="fu">lapply</span>(df_pokeGEN<span class="sc">$</span>url, pokePULL)</span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>  pokedex <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(pokeLIST, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>  pokedex <span class="ot">&lt;-</span> pokedex <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(pokedex_id)</span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(pokedex)</span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gendex</span>(<span class="dv">3</span>)</span></code></pre></div>
-<pre><code>##           name pokedex_id             type       ability  hp attack defense special.attack special.defense
-## 1      treecko        252            grass      overgrow  40     45      35             65              55
-## 2      grovyle        253            grass      overgrow  50     65      45             85              65
-## 3     sceptile        254            grass      overgrow  70     85      65            105              85
-## 4      torchic        255             fire         blaze  45     60      40             70              50
-## 5    combusken        256    fire/fighting         blaze  60     85      60             85              60
-## 6     blaziken        257    fire/fighting         blaze  80    120      70            110              70
-## 7       mudkip        258            water       torrent  50     70      50             50              50
-## 8    marshtomp        259     water/ground       torrent  70     85      70             60              70
-## 9     swampert        260     water/ground       torrent 100    110      90             85              90
-## 10   poochyena        261             dark      run-away  35     55      35             30              30
-## 11   mightyena        262             dark    intimidate  70     90      70             60              60
-## 12   zigzagoon        263           normal        pickup  38     30      41             30              41
-## 13     linoone        264           normal        pickup  78     70      61             50              61
-## 14     wurmple        265              bug   shield-dust  45     45      35             20              30
-## 15     silcoon        266              bug     shed-skin  50     35      55             25              25
-## 16   beautifly        267       bug/flying         swarm  60     70      50            100              50
-## 17     cascoon        268              bug     shed-skin  50     35      55             25              25
-## 18      dustox        269       bug/poison   shield-dust  60     50      70             50              90
-## 19       lotad        270      water/grass    swift-swim  40     30      30             40              50
-## 20      lombre        271      water/grass    swift-swim  60     50      50             60              70
-## 21    ludicolo        272      water/grass    swift-swim  80     70      70             90             100
-## 22      seedot        273            grass   chlorophyll  40     40      50             30              30
-## 23     nuzleaf        274       grass/dark   chlorophyll  70     70      40             60              40
-## 24     shiftry        275       grass/dark   chlorophyll  90    100      60             90              60
-## 25     taillow        276    normal/flying          guts  40     55      30             30              30
-## 26     swellow        277    normal/flying          guts  60     85      60             75              50
-## 27     wingull        278     water/flying      keen-eye  40     30      30             55              30
-## 28    pelipper        279     water/flying      keen-eye  60     50     100             95              70
-## 29       ralts        280    psychic/fairy   synchronize  28     25      25             45              35
-## 30      kirlia        281    psychic/fairy   synchronize  38     35      35             65              55
-## 31   gardevoir        282    psychic/fairy   synchronize  68     65      65            125             115
-## 32     surskit        283        bug/water    swift-swim  40     30      32             50              52
-## 33  masquerain        284       bug/flying    intimidate  70     60      62            100              82
-## 34   shroomish        285            grass  effect-spore  60     40      60             40              60
-## 35     breloom        286   grass/fighting  effect-spore  60    130      80             60              60
-## 36     slakoth        287           normal        truant  60     60      60             35              35
-## 37    vigoroth        288           normal  vital-spirit  80     80      80             55              55
-## 38     slaking        289           normal        truant 150    160     100             95              65
-## 39     nincada        290       bug/ground compound-eyes  31     45      90             30              30
-## 40     ninjask        291       bug/flying   speed-boost  61     90      45             50              50
-## 41    shedinja        292        bug/ghost  wonder-guard   1     90      45             30              30
-## 42     whismur        293           normal    soundproof  64     51      23             51              23
-## 43     loudred        294           normal    soundproof  84     71      43             71              43
-## 44     exploud        295           normal    soundproof 104     91      63             91              73
-## 45    makuhita        296         fighting     thick-fat  72     60      30             20              30
-## 46    hariyama        297         fighting     thick-fat 144    120      60             40              60
-## 47     azurill        298     normal/fairy     thick-fat  50     20      40             20              40
-## 48    nosepass        299             rock        sturdy  30     45     135             45              90
-## 49      skitty        300           normal    cute-charm  50     45      45             35              35
-## 50    delcatty        301           normal    cute-charm  70     65      65             55              55
-## 51     sableye        302       dark/ghost      keen-eye  50     75      75             65              65
-## 52      mawile        303      steel/fairy  hyper-cutter  50     85      85             55              55
-## 53        aron        304       steel/rock        sturdy  50     70     100             40              40
-## 54      lairon        305       steel/rock        sturdy  60     90     140             50              50
-## 55      aggron        306       steel/rock        sturdy  70    110     180             60              60
-## 56    meditite        307 fighting/psychic    pure-power  30     40      55             40              55
-## 57    medicham        308 fighting/psychic    pure-power  60     60      75             60              75
-## 58   electrike        309         electric        static  40     45      40             65              40
-## 59   manectric        310         electric        static  70     75      60            105              60
-## 60      plusle        311         electric          plus  60     50      40             85              75
-## 61       minun        312         electric         minus  60     40      50             75              85
-## 62     volbeat        313              bug    illuminate  65     73      75             47              85
-## 63    illumise        314              bug     oblivious  65     47      75             73              85
-## 64     roselia        315     grass/poison  natural-cure  50     60      45            100              80
-## 65      gulpin        316           poison   liquid-ooze  70     43      53             43              53
-## 66      swalot        317           poison   liquid-ooze 100     73      83             73              83
-## 67    carvanha        318       water/dark    rough-skin  45     90      20             65              20
-## 68    sharpedo        319       water/dark    rough-skin  70    120      40             95              40
-## 69     wailmer        320            water    water-veil 130     70      35             70              35
-## 70     wailord        321            water    water-veil 170     90      45             90              45
-## 71       numel        322      fire/ground     oblivious  60     60      40             65              45
-## 72    camerupt        323      fire/ground   magma-armor  70    100      70            105              75
-## 73     torkoal        324             fire   white-smoke  70     85     140             85              70
-## 74      spoink        325          psychic     thick-fat  60     25      35             70              80
-## 75     grumpig        326          psychic     thick-fat  80     45      65             90             110
-## 76      spinda        327           normal     own-tempo  60     60      60             60              60
-## 77    trapinch        328           ground  hyper-cutter  45    100      45             45              45
-## 78     vibrava        329    ground/dragon      levitate  50     70      50             50              50
-## 79      flygon        330    ground/dragon      levitate  80    100      80             80              80
-## 80      cacnea        331            grass     sand-veil  50     85      40             85              40
-## 81    cacturne        332       grass/dark     sand-veil  70    115      60            115              60
-## 82      swablu        333    normal/flying  natural-cure  45     40      60             40              75
-## 83     altaria        334    dragon/flying  natural-cure  75     70      90             70             105
-## 84    zangoose        335           normal      immunity  73    115      60             60              60
-## 85     seviper        336           poison     shed-skin  73    100      60            100              60
-## 86    lunatone        337     rock/psychic      levitate  90     55      65             95              85
-## 87     solrock        338     rock/psychic      levitate  90     95      85             55              65
-## 88    barboach        339     water/ground     oblivious  50     48      43             46              41
-## 89    whiscash        340     water/ground     oblivious 110     78      73             76              71
-## 90    corphish        341            water  hyper-cutter  43     80      65             50              35
-## 91   crawdaunt        342       water/dark  hyper-cutter  63    120      85             90              55
-## 92      baltoy        343   ground/psychic      levitate  40     40      55             40              70
-## 93     claydol        344   ground/psychic      levitate  60     70     105             70             120
-## 94      lileep        345       rock/grass  suction-cups  66     41      77             61              87
-## 95     cradily        346       rock/grass  suction-cups  86     81      97             81             107
-## 96     anorith        347         rock/bug  battle-armor  45     95      50             40              50
-## 97     armaldo        348         rock/bug  battle-armor  75    125     100             70              80
-## 98      feebas        349            water    swift-swim  20     15      20             10              55
-## 99     milotic        350            water  marvel-scale  95     60      79            100             125
-## 100   castform        351           normal      forecast  70     70      70             70              70
-##     speed
-## 1      70
-## 2      95
-## 3     120
-## 4      45
-## 5      55
-## 6      80
-## 7      40
-## 8      50
-## 9      60
-## 10     35
-## 11     70
-## 12     60
-## 13    100
-## 14     20
-## 15     15
-## 16     65
-## 17     15
-## 18     65
-## 19     30
-## 20     50
-## 21     70
-## 22     30
-## 23     60
-## 24     80
-## 25     85
-## 26    125
-## 27     85
-## 28     65
-## 29     40
-## 30     50
-## 31     80
-## 32     65
-## 33     80
-## 34     35
-## 35     70
-## 36     30
-## 37     90
-## 38    100
-## 39     40
-## 40    160
-## 41     40
-## 42     28
-## 43     48
-## 44     68
-## 45     25
-## 46     50
-## 47     20
-## 48     30
-## 49     50
-## 50     90
-## 51     50
-## 52     50
-## 53     30
-## 54     40
-## 55     50
-## 56     60
-## 57     80
-## 58     65
-## 59    105
-## 60     95
-## 61     95
-## 62     85
-## 63     85
-## 64     65
-## 65     40
-## 66     55
-## 67     65
-## 68     95
-## 69     60
-## 70     60
-## 71     35
-## 72     40
-## 73     20
-## 74     60
-## 75     80
-## 76     60
-## 77     10
-## 78     70
-## 79    100
-## 80     35
-## 81     55
-## 82     50
-## 83     80
-## 84     90
-## 85     65
-## 86     70
-## 87     70
-## 88     60
-## 89     60
-## 90     35
-## 91     55
-## 92     55
-## 93     75
-## 94     23
-## 95     43
-## 96     75
-## 97     45
-## 98     80
-## 99     81
-## 100    70
-##  [ reached &#39;max&#39; / getOption(&quot;max.print&quot;) -- omitted 35 rows ]</code></pre>
-<h3 id="game-version-1"><code>Game Version</code></h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>gendex <span class="ot">&lt;-</span> <span class="cf">function</span>(gen) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> ((gen <span class="sc">&gt;</span> <span class="dv">8</span>) <span class="sc">||</span> (gen <span class="sc">&lt;</span> <span class="dv">1</span>)) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;This is a non-existent generation. Please refine search or submit a numeric input from 1 to 8.&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  respGEN <span class="ot">&lt;-</span> <span class="fu">GET</span>(<span class="fu">paste0</span>(<span class="st">&quot;http://pokeapi.co/api/v2/generation/&quot;</span>, gen))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  conGEN <span class="ot">&lt;-</span> <span class="fu">content</span>(respGEN, <span class="st">&quot;parsed&quot;</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  df_pokeGEN <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(conGEN<span class="sc">$</span>pokemon_species, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  pokePULL <span class="ot">&lt;-</span> <span class="cf">function</span>(url) {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    specCON <span class="ot">&lt;-</span> <span class="fu">content</span>(<span class="fu">GET</span>(url), <span class="st">&quot;parsed&quot;</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    pokeURL <span class="ot">&lt;-</span> specCON<span class="sc">$</span>varieties[[<span class="dv">1</span>]]<span class="sc">$</span>pokemon<span class="sc">$</span>url</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    pokeCON <span class="ot">&lt;-</span> <span class="fu">content</span>(<span class="fu">GET</span>(pokeURL), <span class="st">&quot;parsed&quot;</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    stats <span class="ot">&lt;-</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sapply</span>(pokeCON<span class="sc">$</span>stats, <span class="cf">function</span>(stats)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        stats[[<span class="st">&quot;base_stat&quot;</span>]])</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(stats) <span class="ot">&lt;-</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sapply</span>(pokeCON<span class="sc">$</span>stats, <span class="cf">function</span>(stats)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        stats[[<span class="st">&quot;stat&quot;</span>]][[<span class="st">&quot;name&quot;</span>]])</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(pokeCON<span class="sc">$</span>types)) {</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (pokeCON<span class="sc">$</span>types[[i]][[<span class="st">&quot;slot&quot;</span>]] <span class="sc">==</span> <span class="dv">1</span>){</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        type <span class="ot">&lt;-</span> pokeCON<span class="sc">$</span>types[[<span class="dv">1</span>]][[<span class="st">&quot;type&quot;</span>]][[<span class="st">&quot;name&quot;</span>]]</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>      <span class="cf">else</span> {</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        type <span class="ot">&lt;-</span> <span class="fu">paste0</span>(pokeCON<span class="sc">$</span>types[[<span class="dv">1</span>]][[<span class="st">&quot;type&quot;</span>]][[<span class="st">&quot;name&quot;</span>]], <span class="st">&quot;/&quot;</span>,      </span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>                       pokeCON<span class="sc">$</span>types[[<span class="dv">2</span>]][[<span class="st">&quot;type&quot;</span>]][[<span class="st">&quot;name&quot;</span>]])</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(pokeCON<span class="sc">$</span>abilities)) {</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (pokeCON<span class="sc">$</span>abilities[[i]][[<span class="st">&quot;slot&quot;</span>]] <span class="sc">==</span> <span class="dv">1</span>) {</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        ability <span class="ot">&lt;-</span> pokeCON<span class="sc">$</span>abilities[[<span class="dv">1</span>]][[<span class="st">&quot;ability&quot;</span>]][[<span class="st">&quot;name&quot;</span>]]</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>      } </span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>      <span class="fu">c</span>(</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        <span class="at">name =</span> pokeCON<span class="sc">$</span>name,</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        <span class="at">pokedex_id =</span> pokeCON<span class="sc">$</span>id,</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>        <span class="at">type =</span> type,</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        <span class="at">ability =</span> ability,</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        <span class="at">weight =</span> pokeCON<span class="sc">$</span>weight,</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.list</span>(stats)</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>  pokeLIST <span class="ot">&lt;-</span> <span class="fu">lapply</span>(df_pokeGEN<span class="sc">$</span>url, pokePULL)</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>  pokedex <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(pokeLIST, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>  pokedex <span class="ot">&lt;-</span> pokedex <span class="sc">%&gt;%</span> <span class="fu">arrange</span>(pokedex_id)</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(pokedex)</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="typedex"><code>TypeDex</code></h3>
 <p>This function returns a complete list of moves from the
 <code>type</code> endpoint. It returns a <code>data.frame</code> of
 moves found in that type, listing their <code>name</code>,
@@ -949,117 +741,425 @@ drains health from the opponent), and <code>flinch</code> (the chance
 the move causes the enemy to flinch. This function takes a numeric input
 from <code>1</code> to <code>20</code>, which is the number of types
 present.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>typedex <span class="ot">&lt;-</span> <span class="cf">function</span>(type) {</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> ((type <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">||</span> (type <span class="sc">&lt;</span> <span class="dv">1</span>)) {</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;This is a non-existent typing. Please refine search or submit a numeric input from 1 to 20.&quot;</span>)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  respTYPE <span class="ot">&lt;-</span> <span class="fu">GET</span>(<span class="fu">paste0</span>(<span class="st">&quot;http://pokeapi.co/api/v2/type/&quot;</span>, type))</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  conTYPE <span class="ot">&lt;-</span> <span class="fu">content</span>(respTYPE, <span class="st">&quot;parsed&quot;</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  df_typeGEN <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(conTYPE<span class="sc">$</span>moves, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  typePULL <span class="ot">&lt;-</span> <span class="cf">function</span>(url) {</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    moveCON <span class="ot">&lt;-</span> <span class="fu">content</span>(<span class="fu">GET</span>(url), <span class="st">&quot;parsed&quot;</span>)</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.null</span>(moveCON<span class="sc">$</span>accuracy)) {</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        moveCON<span class="sc">$</span>accuracy <span class="ot">=</span> <span class="st">&quot;NA&quot;</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.null</span>(moveCON<span class="sc">$</span>power)) {</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        moveCON<span class="sc">$</span>power <span class="ot">=</span> <span class="st">&quot;NA&quot;</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>      <span class="fu">c</span>(</span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">name =</span> moveCON<span class="sc">$</span>name,</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">move_id =</span> moveCON<span class="sc">$</span>id,</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>        <span class="at">accuracy =</span> moveCON<span class="sc">$</span>accuracy,</span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>        <span class="at">power =</span> moveCON<span class="sc">$</span>power,</span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">pp =</span> moveCON<span class="sc">$</span>pp,</span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">crit =</span> moveCON<span class="sc">$</span>meta<span class="sc">$</span>crit_rate,</span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>        <span class="at">drain =</span> moveCON<span class="sc">$</span>meta<span class="sc">$</span>drain,</span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>        <span class="at">flinch =</span> moveCON<span class="sc">$</span>meta<span class="sc">$</span>flinch_chance</span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  typeLIST <span class="ot">&lt;-</span> <span class="fu">lapply</span>(df_typeGEN<span class="sc">$</span>url, typePULL)</span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  typedex <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(typeLIST, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(typedex) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&#39;name&#39;</span>, <span class="st">&#39;move_id&#39;</span>, <span class="st">&#39;accuracy&#39;</span>, <span class="st">&#39;power&#39;</span>, <span class="st">&#39;pp&#39;</span>, <span class="st">&#39;crit_rate&#39;</span>, <span class="st">&#39;drain&#39;</span>, <span class="st">&#39;flinch_chance&#39;</span>)</span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>  typedex <span class="ot">&lt;-</span> <span class="fu">type.convert</span>(typedex)</span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(typedex)</span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">typedex</span>(<span class="dv">11</span>)</span></code></pre></div>
-<pre><code>##                      name move_id accuracy power pp crit_rate drain flinch_chance
-## 1               water-gun      55      100    40 25         0     0             0
-## 2              hydro-pump      56       80   110  5         0     0             0
-## 3                    surf      57      100    90 15         0     0             0
-## 4             bubble-beam      61      100    65 20         0     0             0
-## 5                withdraw     110       NA    NA 40         0     0             0
-## 6               waterfall     127      100    80 15         0     0            20
-## 7                   clamp     128       85    35 15         0     0             0
-## 8                  bubble     145      100    40 30         0     0             0
-## 9              crabhammer     152       90   100 10         1     0             0
-## 10              octazooka     190       85    65 10         0     0             0
-## 11             rain-dance     240       NA    NA  5         0     0             0
-## 12              whirlpool     250       85    35 15         0     0             0
-## 13                   dive     291      100    80 10         0     0             0
-## 14           hydro-cannon     308       90   150  5         0     0             0
-## 15            water-spout     323      100   150  5         0     0             0
-## 16            muddy-water     330       85    90 10         0     0             0
-## 17            water-sport     346       NA    NA 15         0     0             0
-## 18            water-pulse     352      100    60 20         0     0             0
-## 19                  brine     362      100    65 10         0     0             0
-## 20              aqua-ring     392       NA    NA 20         0     0             0
-## 21              aqua-tail     401       90    90 10         0     0             0
-## 22               aqua-jet     453      100    40 20         0     0             0
-## 23                   soak     487      100    NA 20         0     0             0
-## 24                  scald     503      100    80 15         0     0             0
-## 25           water-pledge     518      100    80 10         0     0             0
-## 26            razor-shell     534       95    75 10         0     0             0
-## 27         steam-eruption     592       95   110  5         0     0             0
-## 28         water-shuriken     594      100    15 20         0     0             0
-## 29           origin-pulse     618       85   110 10         0     0             0
-## 30 hydro-vortex--physical     642       NA    NA  1         0     0             0
-## 31  hydro-vortex--special     643       NA    NA  1         0     0             0
-## 32         sparkling-aria     664      100    90 10         0     0             0
-## 33       oceanic-operetta     697       NA   195  1         0     0             0
-## 34            liquidation     710      100    85 10         0     0             0
-## 35         splishy-splash     730      100    90 15         0     0             0
-## 36          bouncy-bubble     733      100    60 20         0   100             0
-## 37             snipe-shot     745      100    80 15         1     0             0
-## 38          fishious-rend     755      100    85 10         0     0             0
-## 39             max-geyser     765       NA    10 10         0     0             0
-## 40               life-dew     791       NA    NA 10         0     0             0
-## 41              flip-turn     812      100    60 20         0     0             0
-## 42        surging-strikes     818      100    25  5         6     0             0</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>typedex <span class="ot">&lt;-</span> <span class="cf">function</span>(type) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> ((type <span class="sc">&gt;</span> <span class="dv">20</span>) <span class="sc">||</span> (type <span class="sc">&lt;</span> <span class="dv">1</span>)) {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;This is a non-existent typing. Please refine search or submit a numeric input from 1 to 20.&quot;</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  respTYPE <span class="ot">&lt;-</span> <span class="fu">GET</span>(<span class="fu">paste0</span>(<span class="st">&quot;http://pokeapi.co/api/v2/type/&quot;</span>, type))</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  conTYPE <span class="ot">&lt;-</span> <span class="fu">content</span>(respTYPE, <span class="st">&quot;parsed&quot;</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  df_typeGEN <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(conTYPE<span class="sc">$</span>moves, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  typePULL <span class="ot">&lt;-</span> <span class="cf">function</span>(url) {</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    moveCON <span class="ot">&lt;-</span> <span class="fu">content</span>(<span class="fu">GET</span>(url), <span class="st">&quot;parsed&quot;</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.null</span>(moveCON<span class="sc">$</span>accuracy)) {</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        moveCON<span class="sc">$</span>accuracy <span class="ot">=</span> <span class="st">&quot;NA&quot;</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.null</span>(moveCON<span class="sc">$</span>power)) {</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        moveCON<span class="sc">$</span>power <span class="ot">=</span> <span class="st">&quot;NA&quot;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>      <span class="fu">c</span>(</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">name =</span> moveCON<span class="sc">$</span>name,</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">move_id =</span> moveCON<span class="sc">$</span>id,</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        <span class="at">accuracy =</span> moveCON<span class="sc">$</span>accuracy,</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        <span class="at">power =</span> moveCON<span class="sc">$</span>power,</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">pp =</span> moveCON<span class="sc">$</span>pp,</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">crit =</span> moveCON<span class="sc">$</span>meta<span class="sc">$</span>crit_rate,</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>        <span class="at">drain =</span> moveCON<span class="sc">$</span>meta<span class="sc">$</span>drain,</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>        <span class="at">flinch =</span> moveCON<span class="sc">$</span>meta<span class="sc">$</span>flinch_chance</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>  typeLIST <span class="ot">&lt;-</span> <span class="fu">lapply</span>(df_typeGEN<span class="sc">$</span>url, typePULL)</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>  typedex <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(typeLIST, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(typedex) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&#39;name&#39;</span>, <span class="st">&#39;move_id&#39;</span>, <span class="st">&#39;accuracy&#39;</span>, <span class="st">&#39;power&#39;</span>, <span class="st">&#39;pp&#39;</span>, <span class="st">&#39;crit_rate&#39;</span>, <span class="st">&#39;drain&#39;</span>, <span class="st">&#39;flinch_chance&#39;</span>)</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>  typedex <span class="ot">&lt;-</span> <span class="fu">type.convert</span>(typedex)</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(typedex)</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>location <span class="ot">&lt;-</span> <span class="cf">function</span>(loc) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> ((loc <span class="sc">&gt;</span> <span class="dv">796</span>) <span class="sc">||</span> (loc <span class="sc">&lt;</span> <span class="dv">1</span>)) {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;This is a non-existent location. Please refine search or submit a numeric input from 1 to 796.&quot;</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  respLOC <span class="ot">&lt;-</span> <span class="fu">GET</span>(<span class="fu">paste0</span>(<span class="st">&quot;https://pokeapi.co/api/v2/location/&quot;</span>, loc))</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  conLOC <span class="ot">&lt;-</span> <span class="fu">content</span>(respLOC, <span class="st">&quot;parsed&quot;</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  df_pokeLOC <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(conLOC<span class="sc">$</span>results, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  resPULL <span class="ot">&lt;-</span> <span class="cf">function</span>(url) {</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    resCON <span class="ot">&lt;-</span> <span class="fu">content</span>(<span class="fu">GET</span>(url), <span class="st">&quot;parsed&quot;</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    areaURL <span class="ot">&lt;-</span> resCON<span class="sc">$</span>areas[[<span class="dv">1</span>]]<span class="sc">$</span>url</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    areaCON <span class="ot">&lt;-</span> <span class="fu">content</span>(<span class="fu">GET</span>(areaURL), <span class="st">&quot;parsed&quot;</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">c</span>(</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">name =</span> areaCON<span class="sc">$</span>name,</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">area_id =</span> areaCON<span class="sc">$</span>id,</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">pokemon =</span> areaCON<span class="sc">$</span>pokemon_encounters<span class="sc">$</span>pokemon<span class="sc">$</span>name,</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">chance =</span> areaCON<span class="sc">$</span>pokemon_encounters<span class="sc">$</span>version_details<span class="sc">$</span>encounter_details<span class="sc">$</span>chance,</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">level =</span> areaCON<span class="sc">$</span>pokemon_encounters<span class="sc">$</span>version_details<span class="sc">$</span>encounter_details<span class="sc">$</span>max_level</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  locLIST <span class="ot">&lt;-</span> <span class="fu">lapply</span>(df_pokeLOC<span class="sc">$</span>url, resPULL)</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  locdex <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind.data.frame, <span class="fu">c</span>(locLIST, <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>))</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="co">#  locdex &lt;- pokedex %&gt;% arrange(pokedex_id)</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(locdex)</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <h3 id="pokeapi-wrapper-function"><code>pokeAPI Wrapper Function</code></h3>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>pokeAPI <span class="ot">&lt;-</span> <span class="cf">function</span>(func, ...){</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="do">###</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># This function is a wrapper for the other functions. It takes in the name</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># of the function to use as a character and any additional arguments for that</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># function.</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="do">###</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Find and call the appropriate function using conditional logic.</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (func <span class="sc">==</span> <span class="st">&quot;version&quot;</span>){</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    output <span class="ot">&lt;-</span> <span class="fu">franchise</span>(...)</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (func <span class="sc">==</span> <span class="st">&quot;gendex&quot;</span>){</span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    output <span class="ot">&lt;-</span> <span class="fu">teamTotals</span>(...)</span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (func <span class="sc">==</span> <span class="st">&quot;typedex&quot;</span>){</span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    output <span class="ot">&lt;-</span> <span class="fu">seasonRecords</span>(...)</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> {</span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;ERROR: Argument for func is not valid!&quot;</span>)</span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return the output from the appropriate function.</span></span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(output)</span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pokeAPI <span class="ot">&lt;-</span> <span class="cf">function</span>(func, ...){</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="do">###</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># This function is a wrapper for the other functions. It takes in the name</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># of the function to use as a character and any additional arguments for that</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># function.</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="do">###</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Find and call the appropriate function using conditional logic.</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (func <span class="sc">==</span> <span class="st">&quot;version&quot;</span>){</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    output <span class="ot">&lt;-</span> <span class="fu">version</span>(...)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (func <span class="sc">==</span> <span class="st">&quot;gen&quot;</span>){</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    output <span class="ot">&lt;-</span> <span class="fu">gendex</span>(...)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> <span class="cf">if</span> (func <span class="sc">==</span> <span class="st">&quot;type&quot;</span>){</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    output <span class="ot">&lt;-</span> <span class="fu">typedex</span>(...)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">else</span> {</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">&quot;ERROR: Argument for func is not valid!&quot;</span>)</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Return the output from the appropriate function.</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(output)</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>typing <span class="ot">&lt;-</span> <span class="fu">pokeAPI</span>(<span class="st">&quot;gen&quot;</span>, <span class="dv">1</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>typing <span class="ot">&lt;-</span> typing <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">totalstats =</span> hp<span class="sc">+</span>attack<span class="sc">+</span>defense<span class="sc">+</span>special.attack<span class="sc">+</span>special.defense<span class="sc">+</span>speed)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>typing</span></code></pre></div>
+<pre><code>##          name pokedex_id           type       ability weight  hp attack defense special.attack
+## 1   bulbasaur          1   grass/poison      overgrow     69  45     49      49             65
+## 2     ivysaur          2   grass/poison      overgrow    130  60     62      63             80
+## 3    venusaur          3   grass/poison      overgrow   1000  80     82      83            100
+## 4  charmander          4           fire         blaze     85  39     52      43             60
+## 5  charmeleon          5           fire         blaze    190  58     64      58             80
+## 6   charizard          6    fire/flying         blaze    905  78     84      78            109
+## 7    squirtle          7          water       torrent     90  44     48      65             50
+## 8   wartortle          8          water       torrent    225  59     63      80             65
+## 9   blastoise          9          water       torrent    855  79     83     100             85
+## 10   caterpie         10            bug   shield-dust     29  45     30      35             20
+## 11    metapod         11            bug     shed-skin     99  50     20      55             25
+## 12 butterfree         12     bug/flying compound-eyes    320  60     45      50             90
+## 13     weedle         13     bug/poison   shield-dust     32  40     35      30             20
+## 14     kakuna         14     bug/poison     shed-skin    100  45     25      50             25
+## 15   beedrill         15     bug/poison         swarm    295  65     90      40             45
+## 16     pidgey         16  normal/flying      keen-eye     18  40     45      40             35
+## 17  pidgeotto         17  normal/flying      keen-eye    300  63     60      55             50
+## 18    pidgeot         18  normal/flying      keen-eye    395  83     80      75             70
+## 19    rattata         19         normal      run-away     35  30     56      35             25
+## 20   raticate         20         normal      run-away    185  55     81      60             50
+## 21    spearow         21  normal/flying      keen-eye     20  40     60      30             31
+## 22     fearow         22  normal/flying      keen-eye    380  65     90      65             61
+## 23      ekans         23         poison    intimidate     69  35     60      44             40
+## 24      arbok         24         poison    intimidate    650  60     95      69             65
+## 25    pikachu         25       electric        static     60  35     55      40             50
+## 26     raichu         26       electric        static    300  60     90      55             90
+## 27  sandshrew         27         ground     sand-veil    120  50     75      85             20
+## 28  sandslash         28         ground     sand-veil    295  75    100     110             45
+## 29  nidoran-f         29         poison  poison-point     70  55     47      52             40
+## 30   nidorina         30         poison  poison-point    200  70     62      67             55
+## 31  nidoqueen         31  poison/ground  poison-point    600  90     92      87             75
+## 32  nidoran-m         32         poison  poison-point     90  46     57      40             40
+## 33   nidorino         33         poison  poison-point    195  61     72      57             55
+## 34   nidoking         34  poison/ground  poison-point    620  81    102      77             85
+## 35   clefairy         35          fairy    cute-charm     75  70     45      48             60
+## 36   clefable         36          fairy    cute-charm    400  95     70      73             95
+## 37     vulpix         37           fire    flash-fire     99  38     41      40             50
+## 38  ninetales         38           fire    flash-fire    199  73     76      75             81
+## 39 jigglypuff         39   normal/fairy    cute-charm     55 115     45      20             45
+## 40 wigglytuff         40   normal/fairy    cute-charm    120 140     70      45             85
+## 41      zubat         41  poison/flying   inner-focus     75  40     45      35             30
+## 42     golbat         42  poison/flying   inner-focus    550  75     80      70             65
+## 43     oddish         43   grass/poison   chlorophyll     54  45     50      55             75
+## 44      gloom         44   grass/poison   chlorophyll     86  60     65      70             85
+## 45  vileplume         45   grass/poison   chlorophyll    186  75     80      85            110
+## 46      paras         46      bug/grass  effect-spore     54  35     70      55             45
+## 47   parasect         47      bug/grass  effect-spore    295  60     95      80             60
+## 48    venonat         48     bug/poison compound-eyes    300  60     55      50             40
+## 49   venomoth         49     bug/poison   shield-dust    125  70     65      60             90
+## 50    diglett         50         ground     sand-veil      8  10     55      25             35
+## 51    dugtrio         51         ground     sand-veil    333  35    100      50             50
+## 52     meowth         52         normal        pickup     42  40     45      35             40
+## 53    persian         53         normal        limber    320  65     70      60             65
+## 54    psyduck         54          water          damp    196  50     52      48             65
+## 55    golduck         55          water          damp    766  80     82      78             95
+## 56     mankey         56       fighting  vital-spirit    280  40     80      35             35
+## 57   primeape         57       fighting  vital-spirit    320  65    105      60             60
+## 58  growlithe         58           fire    intimidate    190  55     70      45             70
+## 59   arcanine         59           fire    intimidate   1550  90    110      80            100
+## 60    poliwag         60          water  water-absorb    124  40     50      40             40
+## 61  poliwhirl         61          water  water-absorb    200  65     65      65             50
+## 62  poliwrath         62 water/fighting  water-absorb    540  90     95      95             70
+## 63       abra         63        psychic   synchronize    195  25     20      15            105
+## 64    kadabra         64        psychic   synchronize    565  40     35      30            120
+## 65   alakazam         65        psychic   synchronize    480  55     50      45            135
+## 66     machop         66       fighting          guts    195  70     80      50             35
+## 67    machoke         67       fighting          guts    705  80    100      70             50
+## 68    machamp         68       fighting          guts   1300  90    130      80             65
+## 69 bellsprout         69   grass/poison   chlorophyll     40  50     75      35             70
+## 70 weepinbell         70   grass/poison   chlorophyll     64  65     90      50             85
+## 71 victreebel         71   grass/poison   chlorophyll    155  80    105      65            100
+## 72  tentacool         72   water/poison    clear-body    455  40     40      35             50
+## 73 tentacruel         73   water/poison    clear-body    550  80     70      65             80
+## 74    geodude         74    rock/ground     rock-head    200  40     80     100             30
+## 75   graveler         75    rock/ground     rock-head   1050  55     95     115             45
+## 76      golem         76    rock/ground     rock-head   3000  80    120     130             55
+## 77     ponyta         77           fire      run-away    300  50     85      55             65
+## 78   rapidash         78           fire      run-away    950  65    100      70             80
+## 79   slowpoke         79  water/psychic     oblivious    360  90     65      65             40
+## 80    slowbro         80  water/psychic     oblivious    785  95     75     110            100
+## 81  magnemite         81 electric/steel   magnet-pull     60  25     35      70             95
+## 82   magneton         82 electric/steel   magnet-pull    600  50     60      95            120
+## 83  farfetchd         83  normal/flying      keen-eye    150  52     90      55             58
+##    special.defense speed totalstats
+## 1               65    45        318
+## 2               80    60        405
+## 3              100    80        525
+## 4               50    65        309
+## 5               65    80        405
+## 6               85   100        534
+## 7               64    43        314
+## 8               80    58        405
+## 9              105    78        530
+## 10              20    45        195
+## 11              25    30        205
+## 12              80    70        395
+## 13              20    50        195
+## 14              25    35        205
+## 15              80    75        395
+## 16              35    56        251
+## 17              50    71        349
+## 18              70   101        479
+## 19              35    72        253
+## 20              70    97        413
+## 21              31    70        262
+## 22              61   100        442
+## 23              54    55        288
+## 24              79    80        448
+## 25              50    90        320
+## 26              80   110        485
+## 27              30    40        300
+## 28              55    65        450
+## 29              40    41        275
+## 30              55    56        365
+## 31              85    76        505
+## 32              40    50        273
+## 33              55    65        365
+## 34              75    85        505
+## 35              65    35        323
+## 36              90    60        483
+## 37              65    65        299
+## 38             100   100        505
+## 39              25    20        270
+## 40              50    45        435
+## 41              40    55        245
+## 42              75    90        455
+## 43              65    30        320
+## 44              75    40        395
+## 45              90    50        490
+## 46              55    25        285
+## 47              80    30        405
+## 48              55    45        305
+## 49              75    90        450
+## 50              45    95        265
+## 51              70   120        425
+## 52              40    90        290
+## 53              65   115        440
+## 54              50    55        320
+## 55              80    85        500
+## 56              45    70        305
+## 57              70    95        455
+## 58              50    60        350
+## 59              80    95        555
+## 60              40    90        300
+## 61              50    90        385
+## 62              90    70        510
+## 63              55    90        310
+## 64              70   105        400
+## 65              95   120        500
+## 66              35    35        305
+## 67              60    45        405
+## 68              85    55        505
+## 69              30    40        300
+## 70              45    55        390
+## 71              70    70        490
+## 72             100    70        335
+## 73             120   100        515
+## 74              30    20        300
+## 75              45    35        390
+## 76              65    45        495
+## 77              65    90        410
+## 78              80   105        500
+## 79              40    15        315
+## 80              80    30        490
+## 81              55    45        325
+## 82              70    70        465
+## 83              62    60        377
+##  [ reached &#39;max&#39; / getOption(&quot;max.print&quot;) -- omitted 68 rows ]</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>plot1 <span class="ot">&lt;-</span> <span class="fu">top_n</span>(typing, <span class="at">n=</span><span class="dv">15</span>, totalstats) <span class="sc">%&gt;%</span> <span class="fu">ggplot</span>(., <span class="fu">aes</span>(<span class="at">x=</span>name, <span class="at">y=</span>totalstats, <span class="at">fill=</span>type)) <span class="sc">+</span> <span class="fu">geom_bar</span>(<span class="at">stat=</span><span class="st">&#39;identity&#39;</span>) <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle=</span><span class="dv">45</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>plot1</span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAAAAHgCAMAAABNUi8GAAACH1BMVEUAAAAAADoAAGYAOmYAOpAAZmYAZpAAZrYArPwAu9oAvnAAwasktwAzMzM6AAA6ADo6AGY6OmY6OpA6ZmY6ZrY6kNtNTU1NTWpNTW5NTYZNTY5NaqBNbo5NbqtNhrlNjqtNjshmAABmADpmAGZmOgBmOjpmOpBmZgBmZjpmZmZmkJBmtv9qTU1qTYZqaoZqaqBqoKBqoLlqoNNuTU1uTW5uTY5ubm5ubo5ubqtujo5uq6tuq8huq+SGTU2GTYaGubmGueuLk/+MqwCOTU2OTW6OTY6Obk2Obm6ObquOjk2OjsiOq6uOq+SOyMiOyOSOyP+QOgCQOjqQOmaQZgCQkDqQkGaQtpCQ27aQ29uQ2/+gak2gamqgaoagoLmguaCg0+urbk2rbm6rbo6rjk2rjm6rjqurq26rq46rq8irq+SryKur5Mir5OSr5P+2ZgC2Zjq225C22/+2/7a2/9u2//+5hk25oIa5udO567m569O56+u+nADIjk3Ijm7Iq47Iq6vIyI7IyOTI5KvI5OTI5P/I/8jI/+TI///ToGrToIbTuYbT09PT0+vT6+vVdf7bkDrb25Db///higDkq27kq47kyI7k5Kvk5Mjk5OTk5P/k/8jk/+Tk///ruYbruaDr06Dr07nr67nr69Pr6+vy8vL4dm35Yt3/Zaz/tmb/yI7/yKv/25D/27b/29v/5Kv/5Mj//7b//8j//9v//+T///8VrGC1AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAgAElEQVR4nO2djX8cR3nHzyYgKIntGHSkAYOMw0tRoSXBEBqlTeskfaEguZAQJdAoaXkpxSIFhbaJaQltUfoCiqNASes0xGlaqdcKSTd/YOdt725351ndvtzenP39fRKvbp/b27nZ7z7zzOw8Nx2FUMTqTLsACBUJQFHUAlAUtQAURS0ARVELQFHUqgbo62llX49litkSQRGmVuyGAasrAI20CADqBKCRFgFAnQA00iIAqBOARloEAHUC0EiLAKBOABppEQDUiXFQFLXwoJEWAQ/qBKCRFgFAnQA00iIAqBOARloEAHUC0EiLAKBOABppEQDUCUAjLQKAOgFopEUAUCcAjbQIAOoEoJEWAUCdALT1E/22oPrnAdBE7VZZ+xYAjUYA2vqJALSMALT1EwFoGQFo6ycC0DIC0NZPBKBlBKCtnwhAywhAWz8RgJYRgLZ+IgAtIwBt/UQAWkYA2vqJALSMALT1EwFoGQFo6ycC0DIC0NZPBKBlBKCtnwhAywhAWz8RgJYRgLZ+IgAtIwBt/UQAWkYA2vqJALSMALT1EwFoGQFo6ycC0DIC0NZPNJuA/u9fVIesjgC09RPNJKC9k6s1KKshAG39RABaRgDa+olmEdDeiU5nfn1O/7U11zv5UKdz0xWlDlc6neMb1dkbSwDa+olmEVDrQXc0jYcri70TxzcOV+aU+V9tGVInKQBt/UQzC+j+2UXVO7XRO7FoXxte7b6JCkBbP9HMAqqbd/Of/VODudWxmq9B3xgC0NZPNLuA9k59Z2VxCOikW3crAG39RLML6OHKR05tKNfEn9rYOdZGxx5AWz/RTALqYs2tzpzp0SedJO1CJ04pgLZ+opkEVK07Nm3/6KGOeWGHmSbuRQG09RPNJqBWumFve8weQFs/0QwDumW67AA6fQuAhtQ7YfvtADp9C4BGIwBt/UQAWkYA2vqJALSMALT1EwFoGRUA2l/r3nZJqYML3TNXBxundqusfQuARqMCQC8vq90zV/try2p7QfmNV7tV1r4FQLP6z7CaxjEvGdCDBzaTzd75Tb/xtnarrH0LgGb1RlBTBXTv7j8xTfze3VfVwf2X/Ebvv0Vr8uUaR+FKe+ONaZfLSsKwyBKxYgT0rmVDp27lDZl+423t3tOSRQK0/nkm6ifxoGVU5EFHXefQgxq1W2WSBUCbL/YMAXrwexbJiGNQAG2+2DMEqOnFa7/ZX1tyvfil6HrxANp8sWcJ0IML3ds3Yx4HBdDmiz1LgBao3SqTLADafLGrA3q4cnR+5+HFR1Y67zCTSpWfXHqkAHRChQPQgHqnXzi1MR6YiQB0QoW7sQDdP9t50x2LvVvvOL5hfoRk0e35gMmlNz8+0jv9ebtz581nO8cePrWxvuhZ9fv9mwF0XAuAlgR0fV7tdBZNytL++1dt4232HFu1m5uu9E7YjVpf7FkPuqNfztvfgPD758Xsu0kA+rawGq/M6w/Qm8NqvNjPCrLvrADo/jn3ozi+8dYv7Z6Lq2ajkTUG/b/e4QDd/+CVb/k/zX7/ZgAd+zwAWg5QS+a6B3Td/KRY7/QV5XhMNobH01cclYcXv/jBK0NA/ZsBdOzzAGg5QEc8qP8Bp6AH3ZlTnsqtX5lXeNDq5wHQcoAmMajjzabVpWNQZ1hfHFB5cnUEUGLQsucB0JKAHq7YXrxp4rc65k/TMX/LxUEv3oL4nYsDKg//aGMUUP9mAB3XAqAlAQ2qYMCz985x3wygtYogW25wQIt/FmcrbSp6M4DWKoJsucEBbUwAWqsIsgVAmxGA1iqCbAHQZgSgtYogW64zQCPM6ixScb0A6OsA2pQAtFYRZMt1BuiLQUUN6O+E9TqAWgFoMwLQWkWQLQDajAC0VhFkC4A2IwCtVQTZAqDNCEBrFUG2AGgzAtBaRZAtANqMALRWEWTLjQhodkaSf10ujTMjAK1VBNkCoDXJ9ALQgf4rrIqFaxjQt4ZVsXCNAzqcl+z+MptjX9R/PnXrHcefcrurLUoHoAMBaHVA1+ftQt0ue2Nrzv6Kw85NL7jF5U2WnH1dZXVkAB0IQCsDapLh98/ZhOLBX0qNJHVUb+xjAVS4NIXhVwSA/regGw3Qsx0zJ94A6v86bdekSyUWVxOADgSg1QE9t2E2PoNYJd0jPCiAVvuuk4hBfXax+8vEnL1TTw0Ada83ogf0x2HJl6YqoG8PC0AnBKjrpPeG3XW7OVyxPfje7PTiAfQ6BXRyih9QmYFKgMrFlgENX50XX4wCULlOf0kQgAIogDYlAAVQAAVQAK0qAAXQcQCdwaxOAAVQAAXQSAANvx9AARRAqwhAARRAARRAARRAARRAAbS6ABRAr0NAjYQrrS0CoNoiVKa2SIAqJTEg/ajqG2/ojxMALSy2AKiSHqO8+GJR4SQMiyxSLWiLAGhhnUqASrg9+6x8tccC9Mi041ZXO8aD4kHLph23utoxgAJo2bTjVlc7BlAALZt23OpqxwAKoCXTjttd7RhAAbRk2nG7qx0DKICWTDtud7VjAAXQkmnHH2p1tWMABdByacePtLvaMYACaOUnSW2sdgygAFoV0FZWOwZQAI32WTyAAiiAAiiAAiiAjgcoWZ0ACqAhASiAjgNouNYAFEABtIoAFEABFEABFEABFEABFECrC0ABFEAB9DoH9HCYTNy0ABRA6wPaxLLGggAUQGsDuu+SiXu33nF8w6cdNyYABdBGPGjPpRj7tOPmBKAA2higJnnDpR1XoiooAAXQRgF1acfVYAwJQAG0UUCb9J5GAAqgTQLq044rURUUgAJoo4BWXtZYEIACaH1AJygABVAABVAArSoABVAABVAArSoABdBxACWrE0ABNCQABdBxAA0XDEABFECrCEABFEABFEABFEABFEABtLoAFEABFECvc0DzaccV1jUOC0ABtD6geQIrrGscFoACaG1AA2nHFdY1BlAAnaAHzaQdV1jXuAKg/bVlpQ4udM9cHWwAFEBFQIdpx1XWNa4A6HZ32UK6vZBsABRAiwEdrHZcel3j8oDuferBZXXwwKbaO7/pNwAKoMWAurTjKusalwa0/8Q3tdvcu/uqOrj/kt/o3bdoGbNwpbVFAFRbhMoUK+Dmm5WSGFBKAlR/nABoYbEFQLVFArSocBKGRRapFrRFALSwTiVApVWPnn1WhmFcQH3a8XqFdY1LA7q9ZNr13TOWTL/xJjwoHlQA1C1zXGVd47KAap/ZD3lQAAXQLKAFGn9d47BSgO6fXRz+et5212iJGBRAawBaYl3jMQBdn1NbxzeGv55nPGh/bcn14pfoxQNoeQ9aV6OAagd6uDKndgY/QMo4KIB6xQLo/tn5EUBFASiATgHQw5V5MwSwfvQP5ALojQZoHFmdvROdObU+xo/nASiAknYMoBEBGv6k9mNQsyEGBdCcABRAATSkIaBbnUR0kgA0qwgAHXjQMQSgADoFQMcXgALoNADtnbBNPDEogGYVBaCHK/OHK4vjNPQACqClAM1OUh5/RlM2Bh1vmRsABdBSgJpUj2rKAro1xzATgOZ1BKAum9jmHZs4UbfBOx2Xfuw3c/vnvmAn2rn5nMaDepPf4dOSCwE1T+E1nVt4UAAtCajL5DB5xyat0ycfaWfnN2pdR443XTGuzzXRw3ckO04ITXcKUB2EqvVxJpQCKICOAupz4ZLIUr80nJq/3EbbTPNsNudsarIB1L9jsCMcmDLMBKD1AfXZxI6wddt065beeDq30XbLo/05h+Sd3jSy4yhAedQJoLU9qIHIk+abbL3ZmbO+NOVBvamMBwVQAK0Xg3rKeidXDZyGTLdZ17Hp2bnBb9/YGNSbhjuOApRn8QBapxf/Ft/Ea47edMeib+jdxoyC7r//w5levH/HcMe4HnQMASiApgBVR469+z5RadFJAtD6gI6RTdwIoKm8+CIBKIBmPeiEVJgXLwpAAXQKgOby4kUBKIBOB1Dy4gE0qCiyOsmLB9CoASUvHkAlQMP1ScoHgAJoFQEogLYNqP31+w45SQAa1PQBLSUABVAABVAAJe0YQGcIUNKOAXRCgBasjeRnQUmToUg7BtAWAC1IOz5imh5pxwDaAKDjpx27HXYR5Ct2TaXeqQ+ZA/wiSrlJe6QdA2gDgI6ddux32EWQdTypm+sXTiQ5H+51Bj7SjgG0PqAl0o79fr8IslJJskeyUl1WDDMBaH1Ax0879jvcIsg2MB0BNBSoktUJoI160CPSjpP9fhFkVcqDAiiA1otBj047TpKNzSLIJubsnXpqAKh7nYGPtGMAbQDQ8dOO/X6zCLLyvfjBcshH9eJJOwbQ6uOg5dKO84sgC6KTBKD1AS2ddrw19pLHaUBtMz9/9FEACqBZDzohpQDdcj9FcjShAAqgUwCUXjyAXieAGglXWlsEQLVFqEwlLfd8881KSQwoJQGqpPp8e2GxBUC1RQK0qHAShkUWqRa0RQC0sE4lQJWSAJWvdhxZnTTxeNCo047pJAGoAGj4kpLyAaAAOhSdJAAFUAAF0DLiWTyAzgigPIsH0MgBHV8ACqAACqAACqAA2gSgual2hxcfWem8w+8df+3tgAAUQCfgQXunXxBSOMoKQAG0GQ/qpsP7VWJ23qxfPXxqw+a/G1b9atsufx5AAbR1QH1S+/q8z4N3WRw2/9386VfbdrlLAAqgrQPq2nMzb37/3IbL8DS/3+Dz333ikc/+BFAAbR9Qm9Rufwb52Kp+4RM1bf77AFCfPw+gADotD3rO/Kt25pJdPv8dDwqgUwbUJ7W7X0dcXxxQeXJ1BFBiUACdFqDDXvyxVeMkPZUm/30EUJc/D6AAGsuTpHz+e8nRUQAF0AkCmsl/HyN/PisABdBJetDaAlAABVAAnXlAI8nqHFcACqAACqARARo+PYACKIBWEYACKIACKIACKIACKIACaHUBKIACKIACaFUBKIC2A2jFHE8ABVAABdDrHNCRrGKzTOetdxz/zsWHOp35HftzyG6BbgAF0OkBOpJVfNMVsyr34cqc3mtTk/wC3QAKoNMDdJgTp3G0qR4X3dqxyfLb5wAUQKcOqCczB6hdnxNAAXTagIY9qF+gG0ABdNqAJjFoGlCffQygADp1QH0vPtPEuwW6ARRApwboBAWgAAqgAAqgVQWgAAqgADrzgJLVCaAAGhKAAug4gIaLPF1A9+7qdpeVOrjQPXN1sHECUACdOqAH919Se5+41F9bVtsLym+8ABRApw7orsHx8vLBA5tq7/ym33gbgALo1AE10l507+6rIxu97xYtYxOutJJ+Ce1t2iJUprZIgColMaCUBKj+OAHQwmILgGqLBGhR4SQMiyxSLShpmOethXUqAaqUBKhMQpyA9teW1O4ZS6bfeAMeFA8aAaAHF5Z0VynrQY0AFECnD+jeXboPr4hBAVRFCajj0zbzthe/RC8eQMsC6ufY1VhWVgZ0u2u0zDgogKq6gNYQT5IAtD6g++e+YFfv2OmYCct2ieMrdsWk3qkPJSnHbh0lAAXQaQB69qYrO8dtTtLWnLJLHLvVj184kSSB+NWQARRApwLooknwSHKM/RLHajTds2pjD6AA2gCgNrl40fyGyDGTi2SWOLarH48Aerq89wRQAG0OUL+KsWnG/RLHCg8KoJEAenbOkGngNP+bJY7d6sdPDQD1qyEDKIBOxYN+2HbR7U+IKLvEsfK9+MFPjtCLB9CpNvEjyi9xXF0ACqBNA7pVxVNKAlAArQ/oBAWgAAqgADrzgJLVCaAAGhKAAug4gIZPAqAACqBVBKAACqAACqAACqAACqAAWl0ACqAACqAAWlUACqDNA1o/mXMgAAVQAAXQ6xtQO1v+5KpbSLbTWbTLJQ1XPt6ohqYTgAJofQ+6Na+2Oot6M7Ky8fq8SUE2Kx/XEoACaH1Ae6evfOuhOZ8251Y2NqhWX+N4KAAF0PqA7p/79rmnTn373MZwZWPdwnd8UlItASiANtBJWv/IOw8vPjSnhisbm18ZUQ10lwAUQBsAdKfjotCRlY2HKx/XEoACaAOA2j686a67lY0PV2wv/tgqHhRAowB0cgJQAAVQAAXQqgJQAAVQAJ15QMnqBFAADQlAAXQcQMN1A6AACqBVBKAACqAACqAACqAACqAAWl0ACqAACqAAWlUACqDNA5qZZHd48ZGVzjv8vpIT8AAUQCcOaO/0C5VX8gJQAK0N6FFpxztvPts59vCpDbsMsmH19OfNGshm6aQ3feCIFUGqAWokXGltEQBV0pyYH2uLBKhSEgNKSYDqjxMALSy2AKi2SIAWFU7CsMgi1YK2CIAW1qkEqFISoPLVLvagR6Qdry+6fXYZZPOnWwPZZoUctWQNHhQPWr+JL0471vt9Ip1fBtmvP2fy6vwxAAqgkwS0OO1Y4+vX67TLIA8ANQsgAyiAttFJKkw73plLmn2/DDIeFEBbBrQw7Xh9cUDlydURQIlBAbQtQIvSjo2T9FSaZZBHANVveQseFEBbAHRM5ZdBPnJ0FEABtDVAM8sgH650jl5CHkABtD0PWkEACqAACqAzDyhZnQAKoCEBKICOA2j4awIogAJoFQEogAIogAIogAIogAIogFYXgAIogAIogFYVgAJo84Dm0o4frrzYB4AC6MQBNbkdVQWgAFob0CPTjuf89ORjq8rtBlAAbdODjpN2bCjWBLvdAAqgbQI6ZtqxMbrdAAqgbQI6VtqxDUT9bgAF0FY7SWOmHaty3hNAAbQhQMdIO7Y9qVMbbjeAAmirgI6RdjzsxZdp4QEUQJsAdHICUAAFUAAF0KoCUAAFUACdeUDJ6gTQqAGdmgAUQAEUQAG0qgAUQAEUQAG0qgAUQAEUQAG0qgAUQAEUQAG0qgAUQAEUQAG0qgAUQAEUQAG0qgAUQAEUQAG0qsYG9OBC98zV5AWAAmhLGhfQ/tqy2l5IXgEogLakcQE9eGBT7Z3f9K8AFEBb0riA7t19VR3cf0n/dYvWJEuE0IjGBXT3TAKo0etpZV+PZYrZEkERplbsSZFWUeU9qFG7Vda+JYIiAKhT9Ri0vSpr3xJBEQDUafxe/FKmF99elbVviaAIAOpUfRy0vSpr3xJBEQDUqfqTpPaqrH1LBEUAUCcAjbQIAOoEoJEWAUCdZgTQ/3i8yU/TuvZlAA1bGgasrmYD0GuPvuvx5j7NfuAvPwOg5i4F0GYsr1hCm/q0a4997Bk8qL1LAbQRy7VHu4bQUse8dm+3+97wMT//bve+ksXWJbhTOJFchJYteZOpg/uEg9xdeoMC6uEoVc8Fx1x79D7rQwOWL0tFMMe8du+dQgle0det3JW+TzqReEzrlrzp6fvsNw0e5O7SGxPQBI4y9Vx0zCvv/pFt5QMnMq1U7phrf/n666/+2o80Vc/fGbwR3v0jfd3KXOnn7zQ+VBdjwrC5wlX8tKzJ+chXgq3FtcceD1saBqyuJgNoAkfONKj//EHiMdpLvvpRg+HT77qUq+WPPRMqwqu/+vHH/vijf6W93tPvDd0I1x41hC5ni13wjZ7vavduDp0soEnhQhYXYoSqR/q4a/9ofWSwtfj5d9/1eNDSMGB1NSFAPRw5zzao/wCgwjHWSz6tj7n2pb9+OVfL3XzL+8p95kb4+L88bWxPp/yk96yuIOVi0OdNCR4LRRnyMeUtYuEGIUb+mFf8HR860SuB+hnYHKHZ2l7rLjXMWC1NKAb1cOQ826D+MxbjH4RjrJfU9l+/972hxt9fgaHF3gDP/9a9d+pjTFA7eozzrMbp5jz1oDsR+EbO7/9z/u5JHVQb0GtfeubVcOFGQoz8p732m88EP86W+p9y9WPP9JgZEwmNjLx273LDhNVUNUAzGp1hf3Ch211W/TUNx0LGpPyEve2l/EHLSjrmF3/TNXVmJ6OmLOZMC2rXWlMWkz+lrUt2jmD2mHtevmzOcXk5Y9E7/EelPu5/LrnPs4VbyhYudVDK0h91RHIGQvqY7y2ocOF0nZm6sV8sd57PPZFM083VQn/tzE/y9WPq9DZzzOXbsnVqro3+yOG0oKmrcUCTa2bhGDVZcgf1P7Dsmhe+Wv4te4x/S5ABcwEMhc6asrxkC3Dhffnruf3ZC0uhG6H/xKc2Qyfqr+lraCZrO+oLD8rdcaH66T+5qcIWZW9C4S7VJdfQ9C2KKctLlwy63e7tuZpLlTpfp/p79Z/84cs5QIc3QhxqElDNWvZCj3x9S+7nkvpPLPoev5qtlpEqc/44x0D/OXsBNAbbS7ljlC/AwYWFn6kMUZcs03ufuJQ5xjEdgk1fyVG/X3DQaBHSjmj0mO8tjLxtxKLf7vJm84VzTYX6mXOv+eoxJfvpn2WLkCp1qE5/40Lo47qDGyEONQioYS17oYdIJeT6+h91Usuj/kGlr5qjM8vA3l33PPGN8/+g3dTlhcwxGaRTF8C2bIlnzXr3btDnaW5uuzTi99N3wu7oQSlApTtuJG8mY9n71IO3/fnQmK4EfVvt3dXN3iK+enYXcgfZLzRS6kCd7t0V+jh9Ef9uUKkxqBFAEyXfPWTKkpu1/CxULbrqDx74fuATbSxp9l/O2i6nkc5+oCXUetZMua0HC3+j27459PujRdDe5iehg4zlkyFHNPCS+fO8bEquGQwY002Fl4mNk+r5zPnNzCGO6W6g1FKdms/zQUE3qm58s4C+JKGhr5WAjFL+fs5XS/8rPz3/w7VlXWW5ak7FkqnzZEKMVBGUIzSn5MrkjzLJrLaV/0T2sHQfJGvRJQjdcRkvmRzwnLqsg0jTJm/fnWPt63uppiI5h/kee756zgS+kGH607lSq+FB+c9LBwWRqFFAlei8TOMaxEb2Q67S9P2e6VcMDlxKOmKjx4iOOtVzzUi+Ms4SPCbVBxmVd1E5RyR6SROw6NpZCBWgv3b7ZrCpcHdasHrCTPuP06UKHmQ+bzSUiUXNAZoL/tLaDRIq+yG9W182E5zmrpsbwhnGkunzCAXQZxr2XLOSr8xl01SHjpGgNnSE3b7sJU3AYuLWzH2gPattEUJNhfeh4eoRmE4GF4Q6ve1S8ERTVnOAysGf0Lj6rnjAD+3aUdElHxrmg79lv83GkoXuWN8+g55r5piF4JWxd5y25I9x3zcItaFDdPthL9l/8qs6YDF//Wv6PtCede3TbhA431Ss3f59c7/lq0dmOhlceM+DAdyX7QXKhzLTVlOAFgR/UuPquuIBP2SHnnaX7OUPjHiIY8mF7tiEuctJzzVtGBl5yljM9znIxYwFULtqCLkoN1aU85LKjTwdXMi+3/RajGcNV6k9TzCeHjzYyDGtCkY5k1g78HlTVmOAisGfvjLuZs81lKnHOulPc3V4WTuwezIHaX8j1bIcFroLoAkNHZPvIrtDpBGEAqg9HSG/5o/JekkjcwtkAxbbgpuuYPimd+eRhiqEgRQXMQVHOeVYe9pqCNDcQOJADphQ4yp2xe3H2WDpnrV8jLe2FK7l/tpnpLBwbdlegHw/Xe5OSKFk/hFBRgId0jGDkadcwGL92YFEqLDXBjlXixqy4HBeQaw9bTUDqGsOs9Vin2I6t/bENwKNa3dJ8EMmwDIfth0akTOsBWp5QHrAHftnrNoh3r6ZtkjdCTGUzD8iGMg/8AnTIfarwyNPRp7QfFdQptAHOQKhdrwsN5znii3H2lNWM4AmIyupanFPMb3vypHmujrBrrgLsMzg6B9mLV93/jA/aOqCzNDQtLPYZ6xLab9b0EUOh5JJXBiG+numzxIi1LYHwWOKxucHhIYfKwQplIMceRQ4KXYg1o5BzQAqjKzYqjKNR2DEI5kfkqv/ogBr27qO0FwbH2R+Ju+Ok/Cz/5WrIz9/NjxPqDsRDiUHcWHwEYHxuZlJIolledcOB+RvhKKRJzMgEYwJC0JteUBXGgWWix2JmuokBZrD/nO25ySNeBRNm5GfOulr+p4HA0YhyExZXvpaLggpfLoV2JvEheIjggAcB3/g+mfBfrU4Pi8OSBQ+8CkYag+PAsvFjkT1ATW99M3QyIoJ1742MvMuI6lDaYcf5adOV/U1DbnQYJCZsvzgd0ePK3iuIJdAjgsTWw4OVz3BEQQX/oVGnkQvmZ2zmPkswRtk5i9lLMFiR6PagPpaDI2sfE0axnMVFu5QJjN0UsfZqRFJ7JXDOhlRzwWZIwOWWUt2ntRRJUgkxIWe6QAcZqhsEIvnT2TccWDkSfKS2TmLQyWhZGio/XJ6/lL2q8b3+GhEtQH1vfR8rWgu7gkPkngCQvNDwsOPfmrEwKukL1zCWj7ITAhIW0YnAgUZlKdQSXGhyLQN8RyheQlDT65PFfKS+TmLqfMIoWTBM5Rg5zYu1QW0/6dCL91WS+4ByVFwSP2t3dHJNttpRoYflw0yhwSMWPp3dS+J3ToTSIumYFyY+kY5ClyIJxAaHnoq6FMdOWcxGEoWTKBJvmrEhNYEVN+5vx/upbuOcCZcS88SS9X/7nLS8pebbDMyor6XCjJHR+FHLXvnvy9PBHK3Wt5khnSDcWHmG+XHcSwX/b/9+/Re9yQiOPSU9KmCj8WFXl1BKOmmhQY961euJl81yoecTvUANW5SnAIzmncx3CnAYbrZPlQKPcm2B4qjO2HWds9cDRHQX3vfWleYCKRc9JczWRcoxIUF896cPTygvhse4CjoU7mpcuK06nAo6aKcTwbLIE2Hikr1APVuMtdLL+gi70rVsmuvjGvdMhVtr1p+so1uXeXJGbZYwiwl6+hCjfjXk4Y82L4LYzjiNxp8sXxn3HvJfNXJfSofYIYqtSCU9FFOnlA3mzH0VeNSDUDl0ZiCLrIfjwtVy64YYK0FL41xAQWTM1w6bmCI6/JnLwSaYnPMBfE5gA3kpLZC/EaCZC9Z1KcqSAgWQ8n+kz+Q5hq42YzxqzqgBaMxwV6QDzIXhFld8nQTeaDAfJIQlaXTcXPnWgjeB2aMMfwcQPnElPB0yZIhnOwli/pU0pMNG1kIoeQvHlwSpi7Ls5HeexsAAAK5SURBVBkjU3VAxZ5ruBfkg0wzVidNcxBnAkkDBWYWeMHToGE6blYHgXkRfsqo8BxAFT7eKjAFzlMw8iT0qayEJxsaQjnC2D3z7/Is+dBsxuhUHVBpNMYq1GdwQabw2FfOW1PS4/xkFniejmRekdzo5icID6eMil6lDIayCkeeik8SnipnCh66DmZmoO0jBR/kqfBsxuhUp5Mk91zDd/RuwWNfyUtahYM/cRb4YEJx/uFNgYbP7MVubUOjMQVeUhURGprE9Zw0b8TGBAsqHFEnb4ifz1qAFvRcw541/LTaSZj05BXyAuIs8GR8/iDYvItKntl/VcYwmNNeXs24YqMjILzcfV9BkJmbzRij6gBafogi+LR68GFlHwlLs8DFycHFCj6zT39waMZHFTVH6FEQbkc+inSkGs6LP0pFV0aMlSSJs8CFnuvRH5h7mj8TmnkIi9QyoA1LmAVePb87P2UUTVezDaio0t7YKfM0H01f1ymg6HoRgKKoBaAoagEoiloAiqIWgKKoBaAoagEoiloAiqIWgKKoBaAoagEoiloAiqIWgKKoBaAoagEoiloAiqIWgKKoBaAoagEoiloAiqIWgKKoBaAoagEoiloAiqIWgKKoBaAoagEoiloAiqIWgKKoBaAZ9U4+fKLTWdR/6E1n3r+e77mdhyudzvGNaZfxRhKAZtQ7cdMVtXV8Y/+s5lFv3euO23m4Mqd36r9RWwLQjHonjPc8ufp/hkK9da/9zh3jPS26qCUBaEYaQ//Pjm7ij60OX+t/tjpW89Mu5A0kAM0oYXH/7LFV60FTgNK6ty0AzShhccewuJPxoPr1tMt3owlAMxplsXciA+jhisYWStsUgGY0AHJdR6BfPLuYAtQOM8FnmwJQFLUAFEUtAEVRC0BR1AJQFLUAFEUtAEVRC0BR1AJQFLX+H4Hyr/jxVnXgAAAAAElFTkSuQmCC" /><!-- --></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>move1 <span class="ot">&lt;-</span> <span class="fu">pokeAPI</span>(<span class="st">&quot;type&quot;</span>, <span class="dv">14</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>table1 <span class="ot">&lt;-</span> <span class="fu">table</span>(move1<span class="sc">$</span>power)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(table1)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Var1</th>
+<th align="right">Freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">10</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">20</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">50</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">60</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">65</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">70</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="left">80</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="left">85</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">90</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">100</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="left">120</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">140</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">160</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">185</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">200</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>move2 <span class="ot">&lt;-</span> <span class="fu">pokeAPI</span>(<span class="st">&quot;type&quot;</span>, <span class="dv">3</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>table2 <span class="ot">&lt;-</span> <span class="fu">table</span>(move2<span class="sc">$</span>power)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(table2)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Var1</th>
+<th align="right">Freq</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">10</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">35</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">40</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">55</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">60</td>
+<td align="right">5</td>
+</tr>
+<tr class="even">
+<td align="left">65</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">75</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">80</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">85</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">90</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">100</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">110</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">120</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">140</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>plot2 <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(typing, <span class="fu">aes</span>(<span class="at">x=</span>attack, <span class="at">y=</span>defense)) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">stat=</span><span class="st">&#39;identity&#39;</span>) <span class="sc">+</span> <span class="fu">geom_smooth</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle=</span><span class="dv">45</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>plot2</span></code></pre></div>
+<pre><code>## `geom_smooth()` using method = &#39;loess&#39; and formula &#39;y ~ x&#39;</code></pre>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAAAAHgCAMAAABNUi8GAAAA0lBMVEUAAAAAADoAAGYAOpAAZrYzMzMzZv86AAA6ADo6ZmY6kNs9PT1NTU1NTW5NTY5NbqtNjshmAABmtv9uTU1uTW5uTY5ubm5ubqtuq6tuq+SOTU2OTW6OTY6Ojo6OyP+QOgCQtpCQ27aQ2/+rbk2rbm6rbo6ryKur5P+2ZgC22/+2///Ijk3IjqvIyI7I5P/I///KysrW1tbbkDrb/7bb///kq27kq47k///r6+v/tmb/yI7/yMj/25D/27b/29v/5Kv/5Mj//7b//8j//9v//+T///8DTLJTAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAZ/ElEQVR4nO2di3rbxnZGmcRy2oiOL0maOknlNs45dqOeinaj+tK0OpbF93+lEhQpkcTswZ4r9oDr/+LIksi9ZoDlwWAIgrMlIYYzG7sBhPiCoMR0EJSYDoIS00FQYjoISkwnTtD362y+VElF1kS71RgLQS2gYMkVENQACpZcAUENoGDJFRDUAAqWXAFBDaBgyRUQ1AAKllwBQQ2gYMkVENQACpZcAUENoGDJFRDUAAqWXAFBDaBgyRUQ1AAKllwBQQ2gYMkVENQACpZcAUENoGDJFRDUAAqWXAFBDaDKsGazWTWWEASdBqoIazZzG9pWvxDUAgpB5QoIagCFoHIFBDWAYg4qV0BQAyhYcgUENYCCJVdAUAMoWHIFBDWAgiVXQFADKFhyBQQ1gIIlV0BQAyhYcoUkQQmpFEbQMVGw5AoIagAFS66AoAZQsOQKCGoABUuugKAGULDkCghqAAVLroCgBlCw5AoIagAFS66AoAZQsOQKCGoABUuugKAGULDkCghqAAVLroCgBlCw5AoIagAFS66AoAZQsOQKCGoABUuugKAGULDkCghqAAVLroCgBlCw5AoIagAFS66AoAZQsOQKCGoABUuugKAGULDkCghqAAVLroCgBlCw5AoIagAFS66AoAZQsOQKCGoABUuugKDSpw00361JsBBU/LyW1rs1DRaCIqhpFoIiqGkWgr5nDmqZhaAWULDkCghqAAVLroCgBlCw5AoIagAFS66AoAZQsOQKCGoABUuugKAGULDkCghqAAVLroCgBlCw5AoIagAFS66AoAZQsOQKCGoABUuugKAGULDkCghqAAVLrqAR9OqHi+Xycj6ff3uxvP5p/vgdgsKqxNII+rETc3l+1v395uXZ8vIJgsKqxFIIev7or6sR9Oa3V903179c3A6oCAqrBkt9iF8d2ufzs+XVj++W1z93rp6s4nsSIRkzKOjV96+6UfTj462gXXL9Mwn4BzVJFCy5glbQdc7P7kdQBIVVgRUqKHNQWFVZakG7Y/vNXy5uXj7nLB5WPZZ+BL2czx+tDu2sg8KqyVIJKiZXKwLaO0kULLkCghpAwZIrIKgBFCy5AoIaQMGSKyCoARQsuQKCGkDBkisgqAEULLkCghpAwZIrIKgBFCy5AoIaQMGSKyCoARQsuQKCGkDBkisgqAEULLkCghpAwZIrIKgBFCy5AoIaQMGSKyCoARQsuQKCGkDBkisgqAEULLkCghpAwZIrIKgBFCy5AoIaQMGSKyCoARQsuQKCGkDBkisgqAEULLkCghpAwZIrIKgBFCy5AoIaQMGSKyCoARQsuQKCGkDBkisgqAEULLkCghpAwZIrIKgBFCy5AoIaQLXPms1mZVgIagHVPGs2cxuKoNNANc9C0Lv2ThLVPAtB79o7SVT7LOag2/ZOEgVLroCgBlCw5AoIagAFS66AoAZQsOQKCGoABUuugKAGULDkCgiaASUsshRhJactFoJmQEnL1CVY6WmLlSYoWWct6NiNmHgYQRNQjKDlWAiaA8UctBgLQS2gYMkVENQACpZcAUENoGDJFRDUAAqWXAFBDaBgyRUQ1AAqmRWyjDB2v8KWPBDUAiqVFbQQO3K/AheNEdQCCkHlCghqAIWgcgUENYBiDipXQFADKFhyBQQ1gIIlV0BQAyhYcgUENYCCJVdAUAMoWHIFBA1CJV/5GcBKTbHb0ejDWXxlVPq183pWasrd0Esf1kEroxA0LAhaGYWgYUHQ2ijmoEFRzUEX3goIagB11KwFgppHHTFrsUBQ+6jjZS0QtAXUsbIWCwRtAnWkrAWCNoI6StZigaCtoNwLQmWWtAotlLkjb8PFAkGbQbnXrsu8KFDqpQZ3pG24WCBoQ6ijE3SBoE2hjkzQxWG8FRDUAOqY5qA9PRHUPup4WA49EdQ+6mhYTj8R1DzqWFhuPxHUPOo4WIKeCGofdRQs0U8ENY9qihV3mx1ZTwS1j2qJFXWjMp+eCGof1RIrQlC/nghqH9USK1TQITsRtAFUU6ywOajCTwQ1j5os643GTwQ1j5ooa7FA0GmgJsnq1EPQaaAmyLpVr5KgVz9cLJfXP80fv7v7gqCwPNmqV0fQj/NvL5Y3L8+Wl0+2X1oVtOaHDSSz9gpsv0m+nLP89aD35p2enlYQ9PzRX1cj6PUvF91IuvnSqKA1P64lmbVXYPtN8gXxxa+o3xHv9FRnqK+cW9C3s9mzt1/9sXuIv/rx3fL651ebL6sfnqziGXZNZr13WmHtFdh+k7dq/rzZzVrQN8NRtXv3m9df/dfTZ59fPNh+3wn68fHazM2XzS82kpf8B3n4Dyrp2YygRUfQw5Gx1Aj66emz1X/LD1/+viNobwRtUVDmoAXnoA7zCs1BnYJOYg5qFTUBllu9Qmfxb7tD/Ken3+we4m9ePr89i3/e8lm8UVTrLFG9UstMH7qJyp2frIPC8sWjHq8kTQPVMsurHoJOA9Usa0i9QoKuz5Jmd+dIxyloyNmu87FlVgwCqpa+X4lCPZWgp74WOQV9/WD59svf3z7oG3k8goasFzofW2bNNaBq0Ts+qUZGnaCnp74WuQT9dLtK/2F4CN3USO+vOghqQFClnSUF7daYEBRB+9HLWU7Qzy+++fDFr92B/ogFZQ7qSJidOkEfPnwYPAf98+vZg+Xr+4tFjlLQqXYrlhUsp0LQh7fxttYlqDpJPY4Kgo7CirLTI+jD+yxYB7WPMs2KldMp6MO9bH7oba1L0NUhvstRnyRNtlt6VoqZTkF7ZkYKunMlKIIeKyuDnXuCOs2MFLS71g5Bp9otBSuPnBtB+0f0ZEE/v0DQuijFBcvZ4lsSOxBHeb2xEOd0M4ugmiV6BC3OKvPmDPlFhZ432nds+O1UPNjXXpegn57OOEkav1s1BXWqGCvojplcbjcN1HiC+lQMFrR/REfQaaBGmIP2XHSIo/ZTnG6WEvTgffEIOjGWTjtlfNPNQoIevi8eQVthKQZdpTRBcoq/LyNo723HCNoIyzttDZNmIMoFJASdBqqsoFHSSNGvbupZ3i3jELT3vngEbYTlPEWPk6aXMDODWN4t4xL08H3xCFo4yZcW92+MsxBPwmMEDTYziOXrmVtQbTY1tJsxQyYpaPKbMwIWN8MFjTIziOXrWk/QzQQUQVsUdG+3JwsafkSPZPm6hqAGUOmCulyMFzRquulMiUP829k2nMXXin8O6vN0s4udKobPQfOZOczaiW/T9AXletD6KC9LtXaUQZqsZg6w9uPdMg5B9RneurmDoEWkyW6mh9WPd8s4BeW1+LoolaBFpMl7RPezxHi3jEtQXouvjPKzOj+zS5N9uulhDcW7ZRyC8lJnbZSfldeZOmZugqCBKXM7mhCE+9dulmtnBlxDfPDQcDPT3pPUxSVov6pve7kEne5r8WVu6BWCEH7tYInOaK25e+iBmeqF+pT3JG3iYDmq+ranU9DJvhbfiqBZpDk9dY+ZulEtjCU2QfVGEt/2dAuqjXPrFs0RCDq0y3XSyEdz3agWwpLiLICgvlifg0r7+f4vGme2ZqpfSRJUzDCAur0/+Il3LxwKun3PMS91Vu2WZjcPj2iqkyC9oKkp9mGybzs1NS94bmrU2IXb9k4NdbuLfCcuGkFDztC3rN1iej/VXQoo6yvmEnSj5hSXmQyhnNK44hU0YlXzzUFZZaI6WPRiEQQtF0Ead/bmoNvEr7erBc3QT91bnL0VHIJuD/HTWwc1gfJIo03SK0HDgubr6/029LXIW8El6O06qOKau8NWlM/Ygqbe7UOWpq+LW6Dk1yg9c9CkrrnS24bOFnkrOAXVRmhFwYwsaNL9krzS9Ae0w5/kegVdOotP2FRinLurh/dWSBL06LIWNOqZbwaydkT+yb2cQ4Vichrdrcjs4zXPYARVoeJGUM2o5hlBcwybe6ze4FXmRnrvB3fXXiOECggahIrYkUppHHPQXAf1HqsnRSE/NbsLQcdFHeqhfqdldjnz9kuXdBaClkT1LREWdw4ELWNmvn6pg6CGUU5ZBgTNf1DP36+QIKhRlOiLJGj8C0NBcqb2KzQIahHllcblZ24zC/UrIghqDRUsU0UzU/oVGQSV41w5ibijYcBj920ZuBZj74jufC0+4GojdUuLbQJ3EFSMc+05/o6Gg49V37vrwM7bhwjvExo2VLs5Sm8CIQgqpq6guvfe7Mm595A4QYe7kNQvBI1pr/aBNQXVvjlscTDlTBE0tgcIWjb25qAbl5yCeeTcf0jAHDRkA1SchruDoCOjxAGuF//ZuvaC5ZD2SwNgW7sLQaNRDn8GZ51SNIIGd0AYANvaXQgah3Iq5Jt2+uUbFLRWvzIHQcdAiRY5BFUuw3sFrdWvAkHQ6iifST1B1a8SuQWt2S+rLAR9fzBZu/umjxr0bM9Pt52q60E17XT+RnPeLbxTIIinDYLmyN7p7v03B6hBO3ez9zLRgZ++y+307XT+RrVy6diEyUumAazQCgiqEDRIzjs7hTtnOQUNbqfzNwh6jILGyCmq6PypslsIeqSCeuagQXIerHe6Z5uHPw3pFnPQIxXUnbDb0dwd10OeNEa3GmMhqDOdPQGC7sw64y7hnOAmzMRC0H42BikF3Tmu6wUdo1ttshB0PzsSaQQ9eJVd5ecY3WqXhaCb9EUaEjTq3US1u9U8C0G7OF3yCqqws3ff2TUq8BK49BNpFasAJhMLQUXBREF1Q+fhnbtvacLaotStDEuRGlYJTCbWkQvqM8wtqPrAvi/oFoigCKrNkGF9QYNmnTuCOl+oUnULQY9RUJ1gu4LuvYddaef9bbXdL1TpusUc9NgEVdq5cN3QS/3U7ehZr1sBaYt1VILq5dwKGrWUtBXU25b9cWS4WxFjHO9JakbQUMHWCR439wX1+3QwExvsVsQsUXqK/d21V2H6glaWc51BmxBUW2HagkbZtZEz8MO1bqNtGIJqK0xU0CgzF3uTzjBBQzvCHFRZoaqgAVs5ZeuGWrl9LXLvuB5w5dzwEX2oX6mbMERfBF3HNbIEHKeij0+hci4259yHk071pXNZ+qXekRnenIGg6xzsw3WKChph5p2LjlOikJsfImg5VhVBF/dX8hQQNN7MdYTz9QFBVY3V9wtBxQqVBN3s9axz0EQzd+xU3T3RLaevsfp+NT8HLXZCVlfQwT093F5t7eEMLXVyOxp9yi1pjSqoYtfrrAmP0879QbOPSt7aYhBUiiFBVckhqDR0Hkw7dfdLyhMElXJ0gnoO7LKgyZt5cDcUJxRmGZiDXs7n828vltc/zR+/a1TQgVmnIGjyNtbshhqQJll6Qc/Puv/fvDxbXj4ZTVDdpxU44x86HYU6QXvdqnfleamPOyh1bbIzFQW9+e1V9+X6l4vl1Q8XIwka8Hkve/EPnUIB4WrwIvs3kVXmoRlSUdDVoX0+P1te/fhuef1z5+rJKp7HvymRtUqqH+5ke3FSQNXTmbA91rt3aFNlSgCrzENNZbDNV9+/6kbRj4+3gnbx/DOJGB+HEzyCqi7rPCywGWUYQdNT+yz+/Ox+BB1D0LA5aMg7hLd/3ezBXUH3dihz0KDUF3TcOaj+LD7kivi7EbRr9+xQ0CpDTltn1jVZakG7Y/vNXy5uXj4f8yxeJ2jg+zX6d1ZYK4mgFlj6EfRyPn/0aml+HTTizUTCnRUQ1AJLL6grnlbEO+jNgKARb3V7P/QxNDUmbW1JU5M1JUHj7Cy4cfWBJVaYjKDBegpbZDtgJg2c8pPLXA8aEgRdJ91FZwRBwwdPaYNsp5xJU0/5yWWuqA8Kgq6Tw0ZHHILG3GNB3iBRgh4+FEGzsVoXNK+d7+ME7T0WQbOxWhY0Rs7hi+d6c9BhI/rWMAfNxWpW0OxDZ3/T3H5RjFnpw1pb0tRkNSlo1NAZfOFxwEL9kR12a7IaFDTKzojr4nklyQKrNUFr2bnTLV5JGpPVlqBVDu13myb2ibAyshoSNNs5e29IdI6R7oEz4Nw+JKk7MqQ1CLpOCTkfBr6r091l3aqle+p599PMM9PEHRnUGgRdJ7+e678GCCp1GUHr5RgE3T+yawX1dBlB62X6gh5OPHWC+vvMHLRaJi6o47RII2jyRvF0q1BgiRWsCiq8WjQoaPIWud80+UrBiq9gU1BxSWlA0OTtsbtpchaDFVvBoKC+BU+voMlbY3/T5C0HK66COUH96/GyoMmbordpsleEFVHBmKBDrxaJgiZvif6myV8SVngFS4IqXsx0Cbpz24WhDKwdDT/U/5vYBDQrPQi6ThE9nYLu3XfBn4HV9+GH+n8Tm4BmZQiCrlPCTregATsSQd8j6CbBcuquU+oJmuHegwhaLFMQNOwqOtdHbwTsR+agCLpJCTsPBE3u/MCmKVwflqrCmIJGXIJc8bNh2tqRU2WNKGjUu4vuBE3u+fCmKY+ANVxhJEHj3vx2J2hyvzWbpgYE1lCFUQSN1XMjaHKvdZumDgaWv0J9QePtXAifruVM8jlwwMatyUpOW6zKgsbdE2RPUGXH0lcR9Ru3Jis9bbGqCppq58L98W/OIOg0WPUEzWDnIqDHCDoNVi1Bc+i5COoxc9BJsOoImsPO25Ojilu3rR05VVYFQbMMnttzdwQ9MlZxQTPpuT15R9AjY5UVNJed92tLCHpkrJKCZtNzZ+0TQY+MVUzQfHbuLc2PLSjXaFZmFRU0u56jC8pV7rVZaYJ68iZPcjcrMWtBx27EUWbsN82phs8s/yTVYQS1wLItaIkeq8Mc1ALLsqBleqxOWztyqizDghbqsTpt7cipsswKWqzH6rS1I6fKsipouR6r09aOnCrLqKAFe6xOWztyqiyTghbtsSPuU/O2duRUWRYFLdvjfoTFzbZ25FRZ9gQt3eN+ENQwy5ygxXvcD4IaZlkTtHyPHWEOapdlTNAKPVanrR05VZYtQWv0WJ22duRUWaYErdJjddrakVNlGRK0Uo/VaWtHTpVlR9BaPVanrR05VZYZQav1WJ22duRUWUYE7T9fuDIYQY+MZUPQ/tOl91Yg6JGxLAjqejqCwrqtML6gznYhKKzbCqMLKjSMOSisdYWxBQ1tb2J/baJgyRVGFjS4vWndNYqCJVcYV9Dw9ib11ioKllxhTEFj2pvQV7soWHKFEQWNam98Vw2jYMkVxhM0rr3RPbWMgiVXGE3QyPbGdtQ0CpZcYSxBY9sb+TzbKFhyhZEEjW5v7BNNo2DJFcYRNL690c+0jIIlVxhF0IT2xj/VMAqWXGEMQVPam/BcuyhYcoURBE1qb8qTzaJgyRXqC5rW3qRnW0XBkitUFzSxvWlPN4qCJVcoJOjs9LSEnwh6bKxCgs5WgroMTW9vcgWLKFhyhaqCJjcXQY+NVVXQ5NYi6NGxCgnqnIMmN1ZgFUpbO3KqrFKCOs7ik9sqssqkrR05VVY9QZObKrPKpK0dOVVWNUGTW+phlUlbO3KqrFqCJjd0295chUyhYMkVQgW9/mn++F2woMntvGtvtkqWULDkCoGC3rw8W14+CRU0uZn37c1XyhAKllwhUNDrXy6WVz9chAma3Mqd9masZQcFS64QKOjVj++W1z+/Wv3tZBXPA9/cR1maEDlaQT8+3graxfPPpMj4yQh6dKxQQe9HUKWgyS08aG/mejZQsOQKgYKGzkGTG3jY3twFTaBgyRUCBb15+TzkLD65fb32Zq9oAQVLrhAoaNg6aHLz+u3NX9IACpZcIVTQvXhaUcZPBD02VklBkxvnam+JoqOjYMkVygma3DZne4tUHRsFS65QTNDkprnbW6bsyChYcoVSghYKgh4ZC0EtoGDJFRDUAAqWXAFBDaBgyRUQ1AAKllwBQQ2gYMkVENQACpZcAUENoGDJFRDUAAqWXAFBDaBgyRUQ1AAKllwBQQ2gYMkVENQACpZcAUENoGDJFRDUAAqWXAFBDaBgyRUQ1AAKllwBQQ2gYMkVkgS9zUnCcw3nZOwGFMrJ2A2ICoL2cjJ2AwrlZOwGRAVBezkZuwGFcjJ2A6KCoL2cjN2AQjlZ///qu28v/I+zlRRBSXv5+O3Fx/mT4ceZCYI609o4o83Nb6+622w1ZCiCutLcOKPO+dmyM/T52O1QJ03QiQ407Y0zuqx219/WO+zq+1eDDzaSJEEnO9A0N86ost5dtzfRXHewiaQIOtWB5u//+bG1cUaTze6ar/rWfahQI0kaQac50Fx99/jdeWPjjCqb3TVfpZ1BJfUQv5zcQHP1Xbcfz9saZ1RpcnelnSRNcKDp/Lx5OX9+3tQ4M5j/7qxscXclLjNNcKC5fLKatHSH+bEbkjXnj9aGtre7UtdBJzbQLLvPM/mX591UrandOJjLf7o1tLndxUJ9L7eT0Mtpnfqdn3181NTccxsEFdLWTG0oN/9xsWzTUAR15Pqnf57e6u6yTUMR1JH/+VuLu3I4H+ftHRYQlJgOghLTQVBiOghKTAdBiekgKDEdBCWmg6DEdBCUmA6CEtNBUGI6CEpMB0GJ6SAoMR0EJaaDoMR0EJSYDoIS00HQcvnff7/9c5A//+HXERrTahC0WDoRXTIiaEgQtFgQNEcQNH/+/Ho2m33T/f8fV3++2Xy/XH5+MZs9uBX0Q/cXogiCZs+np8+Wy7df/r4dQbfff37xYP331c/+/PrZ2K1sJQiaPf/3x3I9TG4F3f1+uf7rv379zagtbCkIWiAfVof0L369n4Pefv/hy9/Xv+2O+Ayg2iBo9nx6+sWvuyPo9vt7QZ+9/uqPkRvZTBA0ez509n24H0F3v++y+vrpKcd4ZRA0ez50A+bXX/zanRB1f7bfdydJ3Z9O1LdfsNSkC4Lmz+vVjPPfVma+nj3Y/Ln9fmeZ6fMLDvK6ICgxHQQlpoOgxHQQlJgOghLTQVBiOghKTAdBiekgKDGd/wfFUzCGRajXbwAAAABJRU5ErkJggg==" /><!-- --></p>
 
 </body>
 </html>

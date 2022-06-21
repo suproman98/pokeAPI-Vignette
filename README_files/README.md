@@ -7,7 +7,7 @@ Supro Debnath
 -   [pokeAPI Functions](#pokeapi-functions)
     -   [`Game Version`](#game-version)
     -   [`Generation Pokedex`](#generation-pokedex)
-    -   [`Game Version`](#game-version-1)
+    -   [`TypeDex`](#typedex)
     -   [`pokeAPI Wrapper Function`](#pokeapi-wrapper-function)
 
 This vignette is a step-by-step guide to interacting with the
@@ -74,15 +74,6 @@ version <- function(game) {
 }
 ```
 
-``` r
-version(8)
-```
-
-    ## # A tibble: 1 × 3
-    ##   name          region generation    
-    ##   <chr>         <chr>  <chr>         
-    ## 1 ruby-sapphire hoenn  generation-iii
-
 ### `Generation Pokedex`
 
 This function returns a complete pokedex from the `generation` endpoint.
@@ -137,6 +128,7 @@ gendex <- function(gen) {
         pokedex_id = pokeCON$id,
         type = type,
         ability = ability,
+        weight = pokeCON$weight,
         as.list(stats)
       )
     )
@@ -149,215 +141,7 @@ gendex <- function(gen) {
 }
 ```
 
-``` r
-gendex(3)
-```
-
-    ##           name pokedex_id             type       ability  hp attack defense special.attack special.defense
-    ## 1      treecko        252            grass      overgrow  40     45      35             65              55
-    ## 2      grovyle        253            grass      overgrow  50     65      45             85              65
-    ## 3     sceptile        254            grass      overgrow  70     85      65            105              85
-    ## 4      torchic        255             fire         blaze  45     60      40             70              50
-    ## 5    combusken        256    fire/fighting         blaze  60     85      60             85              60
-    ## 6     blaziken        257    fire/fighting         blaze  80    120      70            110              70
-    ## 7       mudkip        258            water       torrent  50     70      50             50              50
-    ## 8    marshtomp        259     water/ground       torrent  70     85      70             60              70
-    ## 9     swampert        260     water/ground       torrent 100    110      90             85              90
-    ## 10   poochyena        261             dark      run-away  35     55      35             30              30
-    ## 11   mightyena        262             dark    intimidate  70     90      70             60              60
-    ## 12   zigzagoon        263           normal        pickup  38     30      41             30              41
-    ## 13     linoone        264           normal        pickup  78     70      61             50              61
-    ## 14     wurmple        265              bug   shield-dust  45     45      35             20              30
-    ## 15     silcoon        266              bug     shed-skin  50     35      55             25              25
-    ## 16   beautifly        267       bug/flying         swarm  60     70      50            100              50
-    ## 17     cascoon        268              bug     shed-skin  50     35      55             25              25
-    ## 18      dustox        269       bug/poison   shield-dust  60     50      70             50              90
-    ## 19       lotad        270      water/grass    swift-swim  40     30      30             40              50
-    ## 20      lombre        271      water/grass    swift-swim  60     50      50             60              70
-    ## 21    ludicolo        272      water/grass    swift-swim  80     70      70             90             100
-    ## 22      seedot        273            grass   chlorophyll  40     40      50             30              30
-    ## 23     nuzleaf        274       grass/dark   chlorophyll  70     70      40             60              40
-    ## 24     shiftry        275       grass/dark   chlorophyll  90    100      60             90              60
-    ## 25     taillow        276    normal/flying          guts  40     55      30             30              30
-    ## 26     swellow        277    normal/flying          guts  60     85      60             75              50
-    ## 27     wingull        278     water/flying      keen-eye  40     30      30             55              30
-    ## 28    pelipper        279     water/flying      keen-eye  60     50     100             95              70
-    ## 29       ralts        280    psychic/fairy   synchronize  28     25      25             45              35
-    ## 30      kirlia        281    psychic/fairy   synchronize  38     35      35             65              55
-    ## 31   gardevoir        282    psychic/fairy   synchronize  68     65      65            125             115
-    ## 32     surskit        283        bug/water    swift-swim  40     30      32             50              52
-    ## 33  masquerain        284       bug/flying    intimidate  70     60      62            100              82
-    ## 34   shroomish        285            grass  effect-spore  60     40      60             40              60
-    ## 35     breloom        286   grass/fighting  effect-spore  60    130      80             60              60
-    ## 36     slakoth        287           normal        truant  60     60      60             35              35
-    ## 37    vigoroth        288           normal  vital-spirit  80     80      80             55              55
-    ## 38     slaking        289           normal        truant 150    160     100             95              65
-    ## 39     nincada        290       bug/ground compound-eyes  31     45      90             30              30
-    ## 40     ninjask        291       bug/flying   speed-boost  61     90      45             50              50
-    ## 41    shedinja        292        bug/ghost  wonder-guard   1     90      45             30              30
-    ## 42     whismur        293           normal    soundproof  64     51      23             51              23
-    ## 43     loudred        294           normal    soundproof  84     71      43             71              43
-    ## 44     exploud        295           normal    soundproof 104     91      63             91              73
-    ## 45    makuhita        296         fighting     thick-fat  72     60      30             20              30
-    ## 46    hariyama        297         fighting     thick-fat 144    120      60             40              60
-    ## 47     azurill        298     normal/fairy     thick-fat  50     20      40             20              40
-    ## 48    nosepass        299             rock        sturdy  30     45     135             45              90
-    ## 49      skitty        300           normal    cute-charm  50     45      45             35              35
-    ## 50    delcatty        301           normal    cute-charm  70     65      65             55              55
-    ## 51     sableye        302       dark/ghost      keen-eye  50     75      75             65              65
-    ## 52      mawile        303      steel/fairy  hyper-cutter  50     85      85             55              55
-    ## 53        aron        304       steel/rock        sturdy  50     70     100             40              40
-    ## 54      lairon        305       steel/rock        sturdy  60     90     140             50              50
-    ## 55      aggron        306       steel/rock        sturdy  70    110     180             60              60
-    ## 56    meditite        307 fighting/psychic    pure-power  30     40      55             40              55
-    ## 57    medicham        308 fighting/psychic    pure-power  60     60      75             60              75
-    ## 58   electrike        309         electric        static  40     45      40             65              40
-    ## 59   manectric        310         electric        static  70     75      60            105              60
-    ## 60      plusle        311         electric          plus  60     50      40             85              75
-    ## 61       minun        312         electric         minus  60     40      50             75              85
-    ## 62     volbeat        313              bug    illuminate  65     73      75             47              85
-    ## 63    illumise        314              bug     oblivious  65     47      75             73              85
-    ## 64     roselia        315     grass/poison  natural-cure  50     60      45            100              80
-    ## 65      gulpin        316           poison   liquid-ooze  70     43      53             43              53
-    ## 66      swalot        317           poison   liquid-ooze 100     73      83             73              83
-    ## 67    carvanha        318       water/dark    rough-skin  45     90      20             65              20
-    ## 68    sharpedo        319       water/dark    rough-skin  70    120      40             95              40
-    ## 69     wailmer        320            water    water-veil 130     70      35             70              35
-    ## 70     wailord        321            water    water-veil 170     90      45             90              45
-    ## 71       numel        322      fire/ground     oblivious  60     60      40             65              45
-    ## 72    camerupt        323      fire/ground   magma-armor  70    100      70            105              75
-    ## 73     torkoal        324             fire   white-smoke  70     85     140             85              70
-    ## 74      spoink        325          psychic     thick-fat  60     25      35             70              80
-    ## 75     grumpig        326          psychic     thick-fat  80     45      65             90             110
-    ## 76      spinda        327           normal     own-tempo  60     60      60             60              60
-    ## 77    trapinch        328           ground  hyper-cutter  45    100      45             45              45
-    ## 78     vibrava        329    ground/dragon      levitate  50     70      50             50              50
-    ## 79      flygon        330    ground/dragon      levitate  80    100      80             80              80
-    ## 80      cacnea        331            grass     sand-veil  50     85      40             85              40
-    ## 81    cacturne        332       grass/dark     sand-veil  70    115      60            115              60
-    ## 82      swablu        333    normal/flying  natural-cure  45     40      60             40              75
-    ## 83     altaria        334    dragon/flying  natural-cure  75     70      90             70             105
-    ## 84    zangoose        335           normal      immunity  73    115      60             60              60
-    ## 85     seviper        336           poison     shed-skin  73    100      60            100              60
-    ## 86    lunatone        337     rock/psychic      levitate  90     55      65             95              85
-    ## 87     solrock        338     rock/psychic      levitate  90     95      85             55              65
-    ## 88    barboach        339     water/ground     oblivious  50     48      43             46              41
-    ## 89    whiscash        340     water/ground     oblivious 110     78      73             76              71
-    ## 90    corphish        341            water  hyper-cutter  43     80      65             50              35
-    ## 91   crawdaunt        342       water/dark  hyper-cutter  63    120      85             90              55
-    ## 92      baltoy        343   ground/psychic      levitate  40     40      55             40              70
-    ## 93     claydol        344   ground/psychic      levitate  60     70     105             70             120
-    ## 94      lileep        345       rock/grass  suction-cups  66     41      77             61              87
-    ## 95     cradily        346       rock/grass  suction-cups  86     81      97             81             107
-    ## 96     anorith        347         rock/bug  battle-armor  45     95      50             40              50
-    ## 97     armaldo        348         rock/bug  battle-armor  75    125     100             70              80
-    ## 98      feebas        349            water    swift-swim  20     15      20             10              55
-    ## 99     milotic        350            water  marvel-scale  95     60      79            100             125
-    ## 100   castform        351           normal      forecast  70     70      70             70              70
-    ##     speed
-    ## 1      70
-    ## 2      95
-    ## 3     120
-    ## 4      45
-    ## 5      55
-    ## 6      80
-    ## 7      40
-    ## 8      50
-    ## 9      60
-    ## 10     35
-    ## 11     70
-    ## 12     60
-    ## 13    100
-    ## 14     20
-    ## 15     15
-    ## 16     65
-    ## 17     15
-    ## 18     65
-    ## 19     30
-    ## 20     50
-    ## 21     70
-    ## 22     30
-    ## 23     60
-    ## 24     80
-    ## 25     85
-    ## 26    125
-    ## 27     85
-    ## 28     65
-    ## 29     40
-    ## 30     50
-    ## 31     80
-    ## 32     65
-    ## 33     80
-    ## 34     35
-    ## 35     70
-    ## 36     30
-    ## 37     90
-    ## 38    100
-    ## 39     40
-    ## 40    160
-    ## 41     40
-    ## 42     28
-    ## 43     48
-    ## 44     68
-    ## 45     25
-    ## 46     50
-    ## 47     20
-    ## 48     30
-    ## 49     50
-    ## 50     90
-    ## 51     50
-    ## 52     50
-    ## 53     30
-    ## 54     40
-    ## 55     50
-    ## 56     60
-    ## 57     80
-    ## 58     65
-    ## 59    105
-    ## 60     95
-    ## 61     95
-    ## 62     85
-    ## 63     85
-    ## 64     65
-    ## 65     40
-    ## 66     55
-    ## 67     65
-    ## 68     95
-    ## 69     60
-    ## 70     60
-    ## 71     35
-    ## 72     40
-    ## 73     20
-    ## 74     60
-    ## 75     80
-    ## 76     60
-    ## 77     10
-    ## 78     70
-    ## 79    100
-    ## 80     35
-    ## 81     55
-    ## 82     50
-    ## 83     80
-    ## 84     90
-    ## 85     65
-    ## 86     70
-    ## 87     70
-    ## 88     60
-    ## 89     60
-    ## 90     35
-    ## 91     55
-    ## 92     55
-    ## 93     75
-    ## 94     23
-    ## 95     43
-    ## 96     75
-    ## 97     45
-    ## 98     80
-    ## 99     81
-    ## 100    70
-    ##  [ reached 'max' / getOption("max.print") -- omitted 35 rows ]
-
-### `Game Version`
+### `TypeDex`
 
 This function returns a complete list of moves from the `type` endpoint.
 It returns a `data.frame` of moves found in that type, listing their
@@ -412,52 +196,38 @@ typedex <- function(type) {
 ```
 
 ``` r
-typedex(11)
-```
+location <- function(loc) {
+  if ((loc > 796) || (loc < 1)) {
+    stop("This is a non-existent location. Please refine search or submit a numeric input from 1 to 796.")
+  }
+  
+  respLOC <- GET(paste0("https://pokeapi.co/api/v2/location/", loc))
+  conLOC <- content(respLOC, "parsed")
+  df_pokeLOC <- do.call(rbind.data.frame, c(conLOC$results, stringsAsFactors = FALSE))
+  
+  
+  resPULL <- function(url) {
+    resCON <- content(GET(url), "parsed")
+    areaURL <- resCON$areas[[1]]$url
+    areaCON <- content(GET(areaURL), "parsed")
 
-    ##                      name move_id accuracy power pp crit_rate drain flinch_chance
-    ## 1               water-gun      55      100    40 25         0     0             0
-    ## 2              hydro-pump      56       80   110  5         0     0             0
-    ## 3                    surf      57      100    90 15         0     0             0
-    ## 4             bubble-beam      61      100    65 20         0     0             0
-    ## 5                withdraw     110       NA    NA 40         0     0             0
-    ## 6               waterfall     127      100    80 15         0     0            20
-    ## 7                   clamp     128       85    35 15         0     0             0
-    ## 8                  bubble     145      100    40 30         0     0             0
-    ## 9              crabhammer     152       90   100 10         1     0             0
-    ## 10              octazooka     190       85    65 10         0     0             0
-    ## 11             rain-dance     240       NA    NA  5         0     0             0
-    ## 12              whirlpool     250       85    35 15         0     0             0
-    ## 13                   dive     291      100    80 10         0     0             0
-    ## 14           hydro-cannon     308       90   150  5         0     0             0
-    ## 15            water-spout     323      100   150  5         0     0             0
-    ## 16            muddy-water     330       85    90 10         0     0             0
-    ## 17            water-sport     346       NA    NA 15         0     0             0
-    ## 18            water-pulse     352      100    60 20         0     0             0
-    ## 19                  brine     362      100    65 10         0     0             0
-    ## 20              aqua-ring     392       NA    NA 20         0     0             0
-    ## 21              aqua-tail     401       90    90 10         0     0             0
-    ## 22               aqua-jet     453      100    40 20         0     0             0
-    ## 23                   soak     487      100    NA 20         0     0             0
-    ## 24                  scald     503      100    80 15         0     0             0
-    ## 25           water-pledge     518      100    80 10         0     0             0
-    ## 26            razor-shell     534       95    75 10         0     0             0
-    ## 27         steam-eruption     592       95   110  5         0     0             0
-    ## 28         water-shuriken     594      100    15 20         0     0             0
-    ## 29           origin-pulse     618       85   110 10         0     0             0
-    ## 30 hydro-vortex--physical     642       NA    NA  1         0     0             0
-    ## 31  hydro-vortex--special     643       NA    NA  1         0     0             0
-    ## 32         sparkling-aria     664      100    90 10         0     0             0
-    ## 33       oceanic-operetta     697       NA   195  1         0     0             0
-    ## 34            liquidation     710      100    85 10         0     0             0
-    ## 35         splishy-splash     730      100    90 15         0     0             0
-    ## 36          bouncy-bubble     733      100    60 20         0   100             0
-    ## 37             snipe-shot     745      100    80 15         1     0             0
-    ## 38          fishious-rend     755      100    85 10         0     0             0
-    ## 39             max-geyser     765       NA    10 10         0     0             0
-    ## 40               life-dew     791       NA    NA 10         0     0             0
-    ## 41              flip-turn     812      100    60 20         0     0             0
-    ## 42        surging-strikes     818      100    25  5         6     0             0
+    return(
+      c(
+        name = areaCON$name,
+        area_id = areaCON$id,
+        pokemon = areaCON$pokemon_encounters$pokemon$name,
+        chance = areaCON$pokemon_encounters$version_details$encounter_details$chance,
+        level = areaCON$pokemon_encounters$version_details$encounter_details$max_level
+      )
+    )
+  }
+  
+  locLIST <- lapply(df_pokeLOC$url, resPULL)
+  locdex <- do.call(rbind.data.frame, c(locLIST, stringsAsFactors = FALSE))
+#  locdex <- pokedex %>% arrange(pokedex_id)
+  return(locdex)
+}
+```
 
 ### `pokeAPI Wrapper Function`
 
@@ -472,13 +242,13 @@ pokeAPI <- function(func, ...){
   # Find and call the appropriate function using conditional logic.
   
   if (func == "version"){
-    output <- franchise(...)
+    output <- version(...)
   }
-  else if (func == "gendex"){
-    output <- teamTotals(...)
+  else if (func == "gen"){
+    output <- gendex(...)
   }
-  else if (func == "typedex"){
-    output <- seasonRecords(...)
+  else if (func == "type"){
+    output <- typedex(...)
   }
   else {
     stop("ERROR: Argument for func is not valid!")
@@ -488,3 +258,242 @@ pokeAPI <- function(func, ...){
   return(output)
 }
 ```
+
+``` r
+typing <- pokeAPI("gen", 1)
+typing <- typing %>% mutate(totalstats = hp+attack+defense+special.attack+special.defense+speed)
+typing
+```
+
+    ##          name pokedex_id           type       ability weight  hp attack defense special.attack
+    ## 1   bulbasaur          1   grass/poison      overgrow     69  45     49      49             65
+    ## 2     ivysaur          2   grass/poison      overgrow    130  60     62      63             80
+    ## 3    venusaur          3   grass/poison      overgrow   1000  80     82      83            100
+    ## 4  charmander          4           fire         blaze     85  39     52      43             60
+    ## 5  charmeleon          5           fire         blaze    190  58     64      58             80
+    ## 6   charizard          6    fire/flying         blaze    905  78     84      78            109
+    ## 7    squirtle          7          water       torrent     90  44     48      65             50
+    ## 8   wartortle          8          water       torrent    225  59     63      80             65
+    ## 9   blastoise          9          water       torrent    855  79     83     100             85
+    ## 10   caterpie         10            bug   shield-dust     29  45     30      35             20
+    ## 11    metapod         11            bug     shed-skin     99  50     20      55             25
+    ## 12 butterfree         12     bug/flying compound-eyes    320  60     45      50             90
+    ## 13     weedle         13     bug/poison   shield-dust     32  40     35      30             20
+    ## 14     kakuna         14     bug/poison     shed-skin    100  45     25      50             25
+    ## 15   beedrill         15     bug/poison         swarm    295  65     90      40             45
+    ## 16     pidgey         16  normal/flying      keen-eye     18  40     45      40             35
+    ## 17  pidgeotto         17  normal/flying      keen-eye    300  63     60      55             50
+    ## 18    pidgeot         18  normal/flying      keen-eye    395  83     80      75             70
+    ## 19    rattata         19         normal      run-away     35  30     56      35             25
+    ## 20   raticate         20         normal      run-away    185  55     81      60             50
+    ## 21    spearow         21  normal/flying      keen-eye     20  40     60      30             31
+    ## 22     fearow         22  normal/flying      keen-eye    380  65     90      65             61
+    ## 23      ekans         23         poison    intimidate     69  35     60      44             40
+    ## 24      arbok         24         poison    intimidate    650  60     95      69             65
+    ## 25    pikachu         25       electric        static     60  35     55      40             50
+    ## 26     raichu         26       electric        static    300  60     90      55             90
+    ## 27  sandshrew         27         ground     sand-veil    120  50     75      85             20
+    ## 28  sandslash         28         ground     sand-veil    295  75    100     110             45
+    ## 29  nidoran-f         29         poison  poison-point     70  55     47      52             40
+    ## 30   nidorina         30         poison  poison-point    200  70     62      67             55
+    ## 31  nidoqueen         31  poison/ground  poison-point    600  90     92      87             75
+    ## 32  nidoran-m         32         poison  poison-point     90  46     57      40             40
+    ## 33   nidorino         33         poison  poison-point    195  61     72      57             55
+    ## 34   nidoking         34  poison/ground  poison-point    620  81    102      77             85
+    ## 35   clefairy         35          fairy    cute-charm     75  70     45      48             60
+    ## 36   clefable         36          fairy    cute-charm    400  95     70      73             95
+    ## 37     vulpix         37           fire    flash-fire     99  38     41      40             50
+    ## 38  ninetales         38           fire    flash-fire    199  73     76      75             81
+    ## 39 jigglypuff         39   normal/fairy    cute-charm     55 115     45      20             45
+    ## 40 wigglytuff         40   normal/fairy    cute-charm    120 140     70      45             85
+    ## 41      zubat         41  poison/flying   inner-focus     75  40     45      35             30
+    ## 42     golbat         42  poison/flying   inner-focus    550  75     80      70             65
+    ## 43     oddish         43   grass/poison   chlorophyll     54  45     50      55             75
+    ## 44      gloom         44   grass/poison   chlorophyll     86  60     65      70             85
+    ## 45  vileplume         45   grass/poison   chlorophyll    186  75     80      85            110
+    ## 46      paras         46      bug/grass  effect-spore     54  35     70      55             45
+    ## 47   parasect         47      bug/grass  effect-spore    295  60     95      80             60
+    ## 48    venonat         48     bug/poison compound-eyes    300  60     55      50             40
+    ## 49   venomoth         49     bug/poison   shield-dust    125  70     65      60             90
+    ## 50    diglett         50         ground     sand-veil      8  10     55      25             35
+    ## 51    dugtrio         51         ground     sand-veil    333  35    100      50             50
+    ## 52     meowth         52         normal        pickup     42  40     45      35             40
+    ## 53    persian         53         normal        limber    320  65     70      60             65
+    ## 54    psyduck         54          water          damp    196  50     52      48             65
+    ## 55    golduck         55          water          damp    766  80     82      78             95
+    ## 56     mankey         56       fighting  vital-spirit    280  40     80      35             35
+    ## 57   primeape         57       fighting  vital-spirit    320  65    105      60             60
+    ## 58  growlithe         58           fire    intimidate    190  55     70      45             70
+    ## 59   arcanine         59           fire    intimidate   1550  90    110      80            100
+    ## 60    poliwag         60          water  water-absorb    124  40     50      40             40
+    ## 61  poliwhirl         61          water  water-absorb    200  65     65      65             50
+    ## 62  poliwrath         62 water/fighting  water-absorb    540  90     95      95             70
+    ## 63       abra         63        psychic   synchronize    195  25     20      15            105
+    ## 64    kadabra         64        psychic   synchronize    565  40     35      30            120
+    ## 65   alakazam         65        psychic   synchronize    480  55     50      45            135
+    ## 66     machop         66       fighting          guts    195  70     80      50             35
+    ## 67    machoke         67       fighting          guts    705  80    100      70             50
+    ## 68    machamp         68       fighting          guts   1300  90    130      80             65
+    ## 69 bellsprout         69   grass/poison   chlorophyll     40  50     75      35             70
+    ## 70 weepinbell         70   grass/poison   chlorophyll     64  65     90      50             85
+    ## 71 victreebel         71   grass/poison   chlorophyll    155  80    105      65            100
+    ## 72  tentacool         72   water/poison    clear-body    455  40     40      35             50
+    ## 73 tentacruel         73   water/poison    clear-body    550  80     70      65             80
+    ## 74    geodude         74    rock/ground     rock-head    200  40     80     100             30
+    ## 75   graveler         75    rock/ground     rock-head   1050  55     95     115             45
+    ## 76      golem         76    rock/ground     rock-head   3000  80    120     130             55
+    ## 77     ponyta         77           fire      run-away    300  50     85      55             65
+    ## 78   rapidash         78           fire      run-away    950  65    100      70             80
+    ## 79   slowpoke         79  water/psychic     oblivious    360  90     65      65             40
+    ## 80    slowbro         80  water/psychic     oblivious    785  95     75     110            100
+    ## 81  magnemite         81 electric/steel   magnet-pull     60  25     35      70             95
+    ## 82   magneton         82 electric/steel   magnet-pull    600  50     60      95            120
+    ## 83  farfetchd         83  normal/flying      keen-eye    150  52     90      55             58
+    ##    special.defense speed totalstats
+    ## 1               65    45        318
+    ## 2               80    60        405
+    ## 3              100    80        525
+    ## 4               50    65        309
+    ## 5               65    80        405
+    ## 6               85   100        534
+    ## 7               64    43        314
+    ## 8               80    58        405
+    ## 9              105    78        530
+    ## 10              20    45        195
+    ## 11              25    30        205
+    ## 12              80    70        395
+    ## 13              20    50        195
+    ## 14              25    35        205
+    ## 15              80    75        395
+    ## 16              35    56        251
+    ## 17              50    71        349
+    ## 18              70   101        479
+    ## 19              35    72        253
+    ## 20              70    97        413
+    ## 21              31    70        262
+    ## 22              61   100        442
+    ## 23              54    55        288
+    ## 24              79    80        448
+    ## 25              50    90        320
+    ## 26              80   110        485
+    ## 27              30    40        300
+    ## 28              55    65        450
+    ## 29              40    41        275
+    ## 30              55    56        365
+    ## 31              85    76        505
+    ## 32              40    50        273
+    ## 33              55    65        365
+    ## 34              75    85        505
+    ## 35              65    35        323
+    ## 36              90    60        483
+    ## 37              65    65        299
+    ## 38             100   100        505
+    ## 39              25    20        270
+    ## 40              50    45        435
+    ## 41              40    55        245
+    ## 42              75    90        455
+    ## 43              65    30        320
+    ## 44              75    40        395
+    ## 45              90    50        490
+    ## 46              55    25        285
+    ## 47              80    30        405
+    ## 48              55    45        305
+    ## 49              75    90        450
+    ## 50              45    95        265
+    ## 51              70   120        425
+    ## 52              40    90        290
+    ## 53              65   115        440
+    ## 54              50    55        320
+    ## 55              80    85        500
+    ## 56              45    70        305
+    ## 57              70    95        455
+    ## 58              50    60        350
+    ## 59              80    95        555
+    ## 60              40    90        300
+    ## 61              50    90        385
+    ## 62              90    70        510
+    ## 63              55    90        310
+    ## 64              70   105        400
+    ## 65              95   120        500
+    ## 66              35    35        305
+    ## 67              60    45        405
+    ## 68              85    55        505
+    ## 69              30    40        300
+    ## 70              45    55        390
+    ## 71              70    70        490
+    ## 72             100    70        335
+    ## 73             120   100        515
+    ## 74              30    20        300
+    ## 75              45    35        390
+    ## 76              65    45        495
+    ## 77              65    90        410
+    ## 78              80   105        500
+    ## 79              40    15        315
+    ## 80              80    30        490
+    ## 81              55    45        325
+    ## 82              70    70        465
+    ## 83              62    60        377
+    ##  [ reached 'max' / getOption("max.print") -- omitted 68 rows ]
+
+``` r
+plot1 <- top_n(typing, n=15, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=45))
+plot1
+```
+
+![](C:/Users/16787/OneDrive/Documents/pokeAPI-Vignette/README_files/README_files/figure-gfm/unnamed-chunk-99-1.png)<!-- -->
+
+``` r
+move1 <- pokeAPI("type", 14)
+table1 <- table(move1$power)
+knitr::kable(table1)
+```
+
+| Var1 | Freq |
+|:-----|-----:|
+| 10   |    1 |
+| 20   |    1 |
+| 50   |    1 |
+| 60   |    1 |
+| 65   |    1 |
+| 70   |    3 |
+| 80   |    7 |
+| 85   |    1 |
+| 90   |    2 |
+| 100  |    3 |
+| 120  |    2 |
+| 140  |    1 |
+| 160  |    1 |
+| 185  |    1 |
+| 200  |    1 |
+
+``` r
+move2 <- pokeAPI("type", 3)
+table2 <- table(move2$power)
+knitr::kable(table2)
+```
+
+| Var1 | Freq |
+|:-----|-----:|
+| 10   |    1 |
+| 35   |    1 |
+| 40   |    2 |
+| 55   |    1 |
+| 60   |    5 |
+| 65   |    1 |
+| 75   |    1 |
+| 80   |    2 |
+| 85   |    1 |
+| 90   |    2 |
+| 100  |    2 |
+| 110  |    1 |
+| 120  |    2 |
+| 140  |    1 |
+
+``` r
+plot2 <- ggplot(typing, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + theme(axis.text.x = element_text(angle=45))
+plot2
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+![](C:/Users/16787/OneDrive/Documents/pokeAPI-Vignette/README_files/README_files/figure-gfm/unnamed-chunk-100-1.png)<!-- -->

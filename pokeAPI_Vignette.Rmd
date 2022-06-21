@@ -9,15 +9,15 @@ This vignette is a step-by-step guide to interacting with the [pokeAPI](https://
 ## Requirements
 
 To interact with this API, a few packages must be installed. 
-+ `jsonlite`: Works with JSON in R and is useful for parsing data and interacting with a web API.
-+ `httr`: Provides useful tools for working with HTTP.
-+ `tidyverse`: Collection of R packages that contribute heavily to API interaction and data visualization.
-+ `knitr`: Provides tools for dynamic reporting in R.
-+ `dplyr`: Package that provides tools for working with data frames.
-+ `ggplot2`: Powerful for complex data visualizations.
+* `jsonlite`: Works with JSON in R and is useful for parsing data and interacting with a web API.
+* `httr`: Provides useful tools for working with HTTP.
+* `tidyverse`: Collection of R packages that contribute heavily to API interaction and data visualization.
+* `knitr`: Provides tools for dynamic reporting in R.
+* `dplyr`: Package that provides tools for working with data frames.
+* `ggplot2`: Powerful for complex data visualizations.
 
 
-```{r}
+```{r libraries, message=FALSE, warning=FALSE}
 library(jsonlite)
 library(httr)
 library(tidyverse)
@@ -57,15 +57,18 @@ version <- function(game) {
 }
 ```
 
+```{r}
+version(8)
+```
 
 
 ### `Generation Pokedex`
 
-This function returns a complete pokedex from the `generation` endpoint. It returns a `data.frame` of pokemon found in that generation, listing their `name`, `id`, `typing` (i.e. fighting type or bug/flying type), `ability` (returning the primary ability, not all pokemon have hidden abilities), and their `stats` (attack, speed, etc.). It takes a numeric input from `1` to `8`, which is the order of each generation being introduced. 
-```{r}
+This function returns a complete pokedex from the `generation` endpoint. It returns a `data.frame` of pokemon found in that generation, listing their `name`, `id`, `typing` (i.e. fighting type or bug/flying type), `ability` (returning the primary ability, not all pokemon have hidden abilities), and their `stats` (attack, speed, etc.). This function takes a numeric input from `1` to `8`, which is the order of each generation being introduced. 
+```{r gendex, warning=FALSE}
 gendex <- function(gen) {
   if ((gen > 8) || (gen < 1)) {
-    stop("This is a non-existent generation. Please refine search or submit a numeric input.")
+    stop("This is a non-existent generation. Please refine search or submit a numeric input from 1 to 8.")
   }
   
   respGEN <- GET(paste0("http://pokeapi.co/api/v2/generation/", gen))
@@ -119,14 +122,67 @@ gendex <- function(gen) {
 ```
 
 ```{r}
-gendex(2)
+gendex(3)
 ```
 
 
 
-### `Wrapper Function`
+### `Game Version`
+
+This function returns a complete list of moves from the `type` endpoint. It returns a `data.frame` of moves found in that type, listing their `name`, `id`, `accuracy`, `power`, `pp` (how many times the move can be used), `crit` (whether it can critically strike), `drain` (whether the move drains health from the opponent), and `flinch` (the chance the move causes the enemy to flinch. This function takes a numeric input from `1` to `20`, which is the number of types present. 
 ```{r}
-pokeAPI <- function(func, ...) {
+typedex <- function(type) {
+  if ((type > 20) || (type < 1)) {
+    stop("This is a non-existent typing. Please refine search or submit a numeric input from 1 to 20.")
+  }
+  
+  respTYPE <- GET(paste0("http://pokeapi.co/api/v2/type/", type))
+  conTYPE <- content(respTYPE, "parsed")
+  df_typeGEN <- do.call(rbind.data.frame, c(conTYPE$moves, stringsAsFactors = FALSE))
+
+  typePULL <- function(url) {
+    moveCON <- content(GET(url), "parsed")
+    
+    
+    if (is.null(moveCON$accuracy)) {
+        moveCON$accuracy = "NA"
+    }
+    
+    if (is.null(moveCON$power)) {
+        moveCON$power = "NA"
+    }
+    
+    return(
+      c(
+        name = moveCON$name,
+        move_id = moveCON$id,
+        accuracy = moveCON$accuracy,
+        power = moveCON$power,
+        pp = moveCON$pp,
+        crit = moveCON$meta$crit_rate,
+        drain = moveCON$meta$drain,
+        flinch = moveCON$meta$flinch_chance
+      )
+    )
+  }
+  
+  typeLIST <- lapply(df_typeGEN$url, typePULL)
+  typedex <- do.call(rbind.data.frame, c(typeLIST, stringsAsFactors = FALSE))
+  names(typedex) <- c('name', 'move_id', 'accuracy', 'power', 'pp', 'crit_rate', 'drain', 'flinch_chance')
+  typedex <- type.convert(typedex)
+  return(typedex)
+}
+```
+
+```{r typedex, warning=FALSE}
+typedex(11)
+```
+
+
+
+### `pokeAPI Wrapper Function`
+```{r}
+pokeAPI <- function(func, ...){
   ###
   # This function is a wrapper for the other functions. It takes in the name
   # of the function to use as a character and any additional arguments for that
@@ -135,15 +191,19 @@ pokeAPI <- function(func, ...) {
   
   # Find and call the appropriate function using conditional logic.
   
-  if (func == "version") {
-    output <- version(...)
+  if (func == "version"){
+    output <- franchise(...)
   }
-  else if (func == "gendex") {
-    output <- gendex(...)
+  else if (func == "gendex"){
+    output <- teamTotals(...)
+  }
+  else if (func == "typedex"){
+    output <- seasonRecords(...)
   }
   else {
     stop("ERROR: Argument for func is not valid!")
   }
+  
   # Return the output from the appropriate function.
   return(output)
 }

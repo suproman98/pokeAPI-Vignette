@@ -24,6 +24,7 @@ library(tidyverse)
 library(knitr)
 library(dplyr)
 library(ggplot2)
+library(ggpubr)
 ```
 
 ## pokeAPI Functions
@@ -76,12 +77,8 @@ gendex <- function(gen) {
     specCON <- content(GET(url), "parsed")
     pokeURL <- specCON$varieties[[1]]$pokemon$url
     pokeCON <- content(GET(pokeURL), "parsed")
-    stats <-
-      sapply(pokeCON$stats, function(stats)
-        stats[["base_stat"]])
-    names(stats) <-
-      sapply(pokeCON$stats, function(stats)
-        stats[["stat"]][["name"]])
+    stats <- sapply(pokeCON$stats, function(stats) stats[["base_stat"]])
+    names(stats) <- sapply(pokeCON$stats, function(stats) stats[["stat"]][["name"]])
     
     for (i in seq_along(pokeCON$types)) {
       if (pokeCON$types[[i]][["slot"]] == 1){
@@ -118,6 +115,9 @@ gendex <- function(gen) {
 }
 ```
 
+```{r}
+gendex(3)
+```
 
 
 ### `TypeDex`
@@ -169,22 +169,22 @@ typedex <- function(type) {
 
 
 
-
+### `Region`
 
 ```{r}
-location <- function(loc) {
-  if ((loc > 796) || (loc < 1)) {
-    stop("This is a non-existent location. Please refine search or submit a numeric input from 1 to 796.")
+region <- function(reg) {
+  if ((reg > 8) || (reg < 1)) {
+    stop("This is a non-existent region. Please refine search or submit a numeric input from 1 to 796.")
   }
   
-  respLOC <- GET(paste0("https://pokeapi.co/api/v2/location/", loc))
-  conLOC <- content(respLOC, "parsed")
-  df_pokeLOC <- do.call(rbind.data.frame, c(conLOC$results, stringsAsFactors = FALSE))
+  respREG <- GET(paste0("https://pokeapi.co/api/v2/region/", reg))
+  conREG <- content(respREG, "parsed")
+  df_pokeREG <- do.call(rbind.data.frame, c(conREG$locations, stringsAsFactors = FALSE))
   
   
-  resPULL <- function(url) {
-    resCON <- content(GET(url), "parsed")
-    areaURL <- resCON$areas[[1]]$url
+  locPULL <- function(url) {
+    locCON <- content(GET(url), "parsed")
+    areaURL <- locCON$areas[[1]]$url
     areaCON <- content(GET(areaURL), "parsed")
 
     return(
@@ -198,12 +198,13 @@ location <- function(loc) {
     )
   }
   
-  locLIST <- lapply(df_pokeLOC$url, resPULL)
-  locdex <- do.call(rbind.data.frame, c(locLIST, stringsAsFactors = FALSE))
+  regLIST <- lapply(df_pokeREG$url, locPULL)
+  regdex <- do.call(rbind.data.frame, c(regLIST, stringsAsFactors = FALSE))
 #  locdex <- pokedex %>% arrange(pokedex_id)
-  return(locdex)
+  return(regdex)
 }
 ```
+
 
 
 
@@ -239,33 +240,74 @@ pokeAPI <- function(func, ...){
 ```
 
 
-```{r}
-typing <- pokeAPI("gen", 1)
-typing <- typing %>% mutate(totalstats = hp+attack+defense+special.attack+special.defense+speed)
-typing
+```{r kanto}
+kanto <- pokeAPI("gen", 1)
+kanto <- kanto %>% mutate(totalstats = hp+attack+defense+special.attack+special.defense+speed)
+head(kanto)
 ```
 
-```{r}
-plot1 <- top_n(typing, n=15, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=45))
+
+```{r kanto strongest}
+plot1 <- top_n(kanto, n=15, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=45))
 plot1
 ```
 
-```{r psymove, warning=FALSE}
-move1 <- pokeAPI("type", 14)
-table1 <- table(move1$power)
-knitr::kable(table1)
-```
 
-
-```{r flymove,warning=FALSE}
-move2 <- pokeAPI("type", 3)
-table2 <- table(move2$power)
-knitr::kable(table2)
-```
-
-
-```{r}
-plot2 <- ggplot(typing, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + theme(axis.text.x = element_text(angle=45))
+```{r kanto type}
+plot2 <- ggplot(kanto, aes(x=totalstats)) + geom_histogram()
 plot2
+```
+
+
+```{r kanto type table, warning=FALSE}
+table1 <- table(kanto$type)
+knitr::kable(table1, col.names = gsub("[.]", " ", names(c("Type Combo", "Count"))))
+```
+
+
+```{r attack v defense kanto, message=FALSE, warning=FALSE}
+plot3 <- ggplot(kanto, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
+plot3
+```
+
+
+```{r kanto boxplot}
+plot4 <- ggplot(kanto, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16, position=position_jitter(0.2)) + coord_flip() + theme(legend.position = "none")
+plot4
+```
+
+
+
+
+```{r hoenn}
+hoenn <- pokeAPI("gen", 3)
+hoenn <- hoenn %>% mutate(totalstats = hp+attack+defense+special.attack+special.defense+speed, avg_total = (totalstats/6))
+head(hoenn)
+```
+
+
+```{r hoenn strongest}
+plot5 <- top_n(hoenn, n=15, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=45))
+plot5
+```
+
+
+```{r hoenn type}
+plot6 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram()
+plot6
+```
+
+
+
+
+```{r attack v defense hoenn, message=FALSE, warning=FALSE}
+plot7 <- ggplot(hoenn, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
+plot7
+```
+
+
+```{r hoenn boxplot}
+plot8 <- ggplot(hoenn, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16, position=position_jitter(0.2)) + coord_flip() + theme(legend.position = "none")
+plot8
 ```
 

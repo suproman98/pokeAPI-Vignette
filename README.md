@@ -4,12 +4,16 @@ Supro Debnath
 2022-06-18
 
 -   [Requirements](#requirements)
--   [pokeAPI Functions](#pokeapi-functions)
+-   [`pokeAPI Functions`](#pokeapi-functions)
     -   [`Game Version`](#game-version)
     -   [`Generation Pokedex`](#generation-pokedex)
     -   [`TypeDex`](#typedex)
     -   [`Region`](#region)
     -   [`pokeAPI Wrapper Function`](#pokeapi-wrapper-function)
+-   [`Visuals`](#visuals)
+    -   [`The Original 151: Kanto Region`](#the-original-151-kanto-region)
+    -   [`The Childhood Favorite: Hoenn Region`](#the-childhood-favorite-hoenn-region)
+    -   [`The People's Champ: Sinnoh Region`](#the-peoples-champ-sinnoh-region)
 
 This vignette is a step-by-step guide to interacting with the
 [pokeAPI](https://pokeapi.co/docs/v2#info). There are a few functions in
@@ -41,7 +45,7 @@ library(ggplot2)
 library(ggpubr)
 ```
 
-## pokeAPI Functions
+## `pokeAPI Functions`
 
 This section is dedicated to the functions I’ve created to pull data
 from this API.
@@ -88,22 +92,32 @@ being introduced.
 
 ``` r
 gendex <- function(gen) {
+  
+  #Create a conditional input statement for this function. If an invalid input is put in, the function breaks.
   if ((gen > 8) || (gen < 1)) {
     stop("This is a non-existent generation. Please refine search or submit a numeric input from 1 to 8.")
   }
   
+  #Parse through the data from the given URL.
   respGEN <- GET(paste0("http://pokeapi.co/api/v2/generation/", gen))
   conGEN <- content(respGEN, "parsed")
+  
+  #Create an empty data frame of the moves URL that will provide stats on different moves.
   df_pokeGEN <- do.call(rbind.data.frame, c(conGEN$pokemon_species, stringsAsFactors = FALSE))
   
-  
+  #Create a function that will parse through the URLs in the move page.
   pokePULL <- function(url) {
     specCON <- content(GET(url), "parsed")
+    
+  #Parse through the varieties URL and get relevant information.
     pokeURL <- specCON$varieties[[1]]$pokemon$url
     pokeCON <- content(GET(pokeURL), "parsed")
+    
+  #Filter through all relevant statistics for each pokemon and label them accordingly.
     stats <- sapply(pokeCON$stats, function(stats) stats[["base_stat"]])
     names(stats) <- sapply(pokeCON$stats, function(stats) stats[["stat"]][["name"]])
     
+  #Create a base loop for going through typing. There are 2 slots, indicating a combo type or single type.
     for (i in seq_along(pokeCON$types)) {
       if (pokeCON$types[[i]][["slot"]] == 1){
         type <- pokeCON$types[[1]][["type"]][["name"]]
@@ -114,12 +128,14 @@ gendex <- function(gen) {
       }
     }
     
+  #Same loop structure for abilities, although we are only going to look at main abilities. To analyze hidden or secondary abilities, add more options.
     for (i in seq_along(pokeCON$abilities)) {
       if (pokeCON$abilities[[i]][["slot"]] == 1) {
         ability <- pokeCON$abilities[[1]][["ability"]][["name"]]
       } 
     }
-    
+ 
+  #Return necessary Pokemon information.
     return(
       c(
         name = pokeCON$name,
@@ -132,200 +148,13 @@ gendex <- function(gen) {
     )
   }
   
+  #Clean up data frame and organize data by Pokemon ID.
   pokeLIST <- lapply(df_pokeGEN$url, pokePULL)
   pokedex <- do.call(rbind.data.frame, c(pokeLIST, stringsAsFactors = FALSE))
   pokedex <- pokedex %>% arrange(pokedex_id)
   return(pokedex)
 }
 ```
-
-``` r
-gendex(3)
-```
-
-    ##          name pokedex_id             type       ability weight  hp attack defense special.attack
-    ## 1     treecko        252            grass      overgrow     50  40     45      35             65
-    ## 2     grovyle        253            grass      overgrow    216  50     65      45             85
-    ## 3    sceptile        254            grass      overgrow    522  70     85      65            105
-    ## 4     torchic        255             fire         blaze     25  45     60      40             70
-    ## 5   combusken        256    fire/fighting         blaze    195  60     85      60             85
-    ## 6    blaziken        257    fire/fighting         blaze    520  80    120      70            110
-    ## 7      mudkip        258            water       torrent     76  50     70      50             50
-    ## 8   marshtomp        259     water/ground       torrent    280  70     85      70             60
-    ## 9    swampert        260     water/ground       torrent    819 100    110      90             85
-    ## 10  poochyena        261             dark      run-away    136  35     55      35             30
-    ## 11  mightyena        262             dark    intimidate    370  70     90      70             60
-    ## 12  zigzagoon        263           normal        pickup    175  38     30      41             30
-    ## 13    linoone        264           normal        pickup    325  78     70      61             50
-    ## 14    wurmple        265              bug   shield-dust     36  45     45      35             20
-    ## 15    silcoon        266              bug     shed-skin    100  50     35      55             25
-    ## 16  beautifly        267       bug/flying         swarm    284  60     70      50            100
-    ## 17    cascoon        268              bug     shed-skin    115  50     35      55             25
-    ## 18     dustox        269       bug/poison   shield-dust    316  60     50      70             50
-    ## 19      lotad        270      water/grass    swift-swim     26  40     30      30             40
-    ## 20     lombre        271      water/grass    swift-swim    325  60     50      50             60
-    ## 21   ludicolo        272      water/grass    swift-swim    550  80     70      70             90
-    ## 22     seedot        273            grass   chlorophyll     40  40     40      50             30
-    ## 23    nuzleaf        274       grass/dark   chlorophyll    280  70     70      40             60
-    ## 24    shiftry        275       grass/dark   chlorophyll    596  90    100      60             90
-    ## 25    taillow        276    normal/flying          guts     23  40     55      30             30
-    ## 26    swellow        277    normal/flying          guts    198  60     85      60             75
-    ## 27    wingull        278     water/flying      keen-eye     95  40     30      30             55
-    ## 28   pelipper        279     water/flying      keen-eye    280  60     50     100             95
-    ## 29      ralts        280    psychic/fairy   synchronize     66  28     25      25             45
-    ## 30     kirlia        281    psychic/fairy   synchronize    202  38     35      35             65
-    ## 31  gardevoir        282    psychic/fairy   synchronize    484  68     65      65            125
-    ## 32    surskit        283        bug/water    swift-swim     17  40     30      32             50
-    ## 33 masquerain        284       bug/flying    intimidate     36  70     60      62            100
-    ## 34  shroomish        285            grass  effect-spore     45  60     40      60             40
-    ## 35    breloom        286   grass/fighting  effect-spore    392  60    130      80             60
-    ## 36    slakoth        287           normal        truant    240  60     60      60             35
-    ## 37   vigoroth        288           normal  vital-spirit    465  80     80      80             55
-    ## 38    slaking        289           normal        truant   1305 150    160     100             95
-    ## 39    nincada        290       bug/ground compound-eyes     55  31     45      90             30
-    ## 40    ninjask        291       bug/flying   speed-boost    120  61     90      45             50
-    ## 41   shedinja        292        bug/ghost  wonder-guard     12   1     90      45             30
-    ## 42    whismur        293           normal    soundproof    163  64     51      23             51
-    ## 43    loudred        294           normal    soundproof    405  84     71      43             71
-    ## 44    exploud        295           normal    soundproof    840 104     91      63             91
-    ## 45   makuhita        296         fighting     thick-fat    864  72     60      30             20
-    ## 46   hariyama        297         fighting     thick-fat   2538 144    120      60             40
-    ## 47    azurill        298     normal/fairy     thick-fat     20  50     20      40             20
-    ## 48   nosepass        299             rock        sturdy    970  30     45     135             45
-    ## 49     skitty        300           normal    cute-charm    110  50     45      45             35
-    ## 50   delcatty        301           normal    cute-charm    326  70     65      65             55
-    ## 51    sableye        302       dark/ghost      keen-eye    110  50     75      75             65
-    ## 52     mawile        303      steel/fairy  hyper-cutter    115  50     85      85             55
-    ## 53       aron        304       steel/rock        sturdy    600  50     70     100             40
-    ## 54     lairon        305       steel/rock        sturdy   1200  60     90     140             50
-    ## 55     aggron        306       steel/rock        sturdy   3600  70    110     180             60
-    ## 56   meditite        307 fighting/psychic    pure-power    112  30     40      55             40
-    ## 57   medicham        308 fighting/psychic    pure-power    315  60     60      75             60
-    ## 58  electrike        309         electric        static    152  40     45      40             65
-    ## 59  manectric        310         electric        static    402  70     75      60            105
-    ## 60     plusle        311         electric          plus     42  60     50      40             85
-    ## 61      minun        312         electric         minus     42  60     40      50             75
-    ## 62    volbeat        313              bug    illuminate    177  65     73      75             47
-    ## 63   illumise        314              bug     oblivious    177  65     47      75             73
-    ## 64    roselia        315     grass/poison  natural-cure     20  50     60      45            100
-    ## 65     gulpin        316           poison   liquid-ooze    103  70     43      53             43
-    ## 66     swalot        317           poison   liquid-ooze    800 100     73      83             73
-    ## 67   carvanha        318       water/dark    rough-skin    208  45     90      20             65
-    ## 68   sharpedo        319       water/dark    rough-skin    888  70    120      40             95
-    ## 69    wailmer        320            water    water-veil   1300 130     70      35             70
-    ## 70    wailord        321            water    water-veil   3980 170     90      45             90
-    ## 71      numel        322      fire/ground     oblivious    240  60     60      40             65
-    ## 72   camerupt        323      fire/ground   magma-armor   2200  70    100      70            105
-    ## 73    torkoal        324             fire   white-smoke    804  70     85     140             85
-    ## 74     spoink        325          psychic     thick-fat    306  60     25      35             70
-    ## 75    grumpig        326          psychic     thick-fat    715  80     45      65             90
-    ## 76     spinda        327           normal     own-tempo     50  60     60      60             60
-    ## 77   trapinch        328           ground  hyper-cutter    150  45    100      45             45
-    ## 78    vibrava        329    ground/dragon      levitate    153  50     70      50             50
-    ## 79     flygon        330    ground/dragon      levitate    820  80    100      80             80
-    ## 80     cacnea        331            grass     sand-veil    513  50     85      40             85
-    ## 81   cacturne        332       grass/dark     sand-veil    774  70    115      60            115
-    ## 82     swablu        333    normal/flying  natural-cure     12  45     40      60             40
-    ## 83    altaria        334    dragon/flying  natural-cure    206  75     70      90             70
-    ## 84   zangoose        335           normal      immunity    403  73    115      60             60
-    ## 85    seviper        336           poison     shed-skin    525  73    100      60            100
-    ## 86   lunatone        337     rock/psychic      levitate   1680  90     55      65             95
-    ## 87    solrock        338     rock/psychic      levitate   1540  90     95      85             55
-    ## 88   barboach        339     water/ground     oblivious     19  50     48      43             46
-    ## 89   whiscash        340     water/ground     oblivious    236 110     78      73             76
-    ## 90   corphish        341            water  hyper-cutter    115  43     80      65             50
-    ##    special.defense speed
-    ## 1               55    70
-    ## 2               65    95
-    ## 3               85   120
-    ## 4               50    45
-    ## 5               60    55
-    ## 6               70    80
-    ## 7               50    40
-    ## 8               70    50
-    ## 9               90    60
-    ## 10              30    35
-    ## 11              60    70
-    ## 12              41    60
-    ## 13              61   100
-    ## 14              30    20
-    ## 15              25    15
-    ## 16              50    65
-    ## 17              25    15
-    ## 18              90    65
-    ## 19              50    30
-    ## 20              70    50
-    ## 21             100    70
-    ## 22              30    30
-    ## 23              40    60
-    ## 24              60    80
-    ## 25              30    85
-    ## 26              50   125
-    ## 27              30    85
-    ## 28              70    65
-    ## 29              35    40
-    ## 30              55    50
-    ## 31             115    80
-    ## 32              52    65
-    ## 33              82    80
-    ## 34              60    35
-    ## 35              60    70
-    ## 36              35    30
-    ## 37              55    90
-    ## 38              65   100
-    ## 39              30    40
-    ## 40              50   160
-    ## 41              30    40
-    ## 42              23    28
-    ## 43              43    48
-    ## 44              73    68
-    ## 45              30    25
-    ## 46              60    50
-    ## 47              40    20
-    ## 48              90    30
-    ## 49              35    50
-    ## 50              55    90
-    ## 51              65    50
-    ## 52              55    50
-    ## 53              40    30
-    ## 54              50    40
-    ## 55              60    50
-    ## 56              55    60
-    ## 57              75    80
-    ## 58              40    65
-    ## 59              60   105
-    ## 60              75    95
-    ## 61              85    95
-    ## 62              85    85
-    ## 63              85    85
-    ## 64              80    65
-    ## 65              53    40
-    ## 66              83    55
-    ## 67              20    65
-    ## 68              40    95
-    ## 69              35    60
-    ## 70              45    60
-    ## 71              45    35
-    ## 72              75    40
-    ## 73              70    20
-    ## 74              80    60
-    ## 75             110    80
-    ## 76              60    60
-    ## 77              45    10
-    ## 78              50    70
-    ## 79              80   100
-    ## 80              40    35
-    ## 81              60    55
-    ## 82              75    50
-    ## 83             105    80
-    ## 84              60    90
-    ## 85              60    65
-    ## 86              85    70
-    ## 87              65    70
-    ## 88              41    60
-    ## 89              71    60
-    ## 90              35    35
-    ##  [ reached 'max' / getOption("max.print") -- omitted 45 rows ]
 
 ### `TypeDex`
 
@@ -339,18 +168,24 @@ to `20`, which is the number of types present.
 
 ``` r
 typedex <- function(type) {
+  
+  #Create a conditional input statement for this function. If an invalid input is put in, the function breaks.
   if ((type > 20) || (type < 1)) {
     stop("This is a non-existent typing. Please refine search or submit a numeric input from 1 to 20.")
   }
   
+  #Parse through the data from the given URL.
   respTYPE <- GET(paste0("http://pokeapi.co/api/v2/type/", type))
   conTYPE <- content(respTYPE, "parsed")
+  
+  #Create an empty data frame of the moves URL that will provide stats on different moves.
   df_typeGEN <- do.call(rbind.data.frame, c(conTYPE$moves, stringsAsFactors = FALSE))
 
+  #Create a function that will parse through the URLs in the move page.
   typePULL <- function(url) {
     moveCON <- content(GET(url), "parsed")
     
-    
+    #IF statements that filter out values listed as null for specific categories.
     if (is.null(moveCON$accuracy)) {
         moveCON$accuracy = "NA"
     }
@@ -359,6 +194,7 @@ typedex <- function(type) {
         moveCON$power = "NA"
     }
     
+    #Return necessary stats.
     return(
       c(
         name = moveCON$name,
@@ -373,6 +209,7 @@ typedex <- function(type) {
     )
   }
   
+  #Clean up data frame and insert new names for relevant columns.
   typeLIST <- lapply(df_typeGEN$url, typePULL)
   typedex <- do.call(rbind.data.frame, c(typeLIST, stringsAsFactors = FALSE))
   names(typedex) <- c('name', 'move_id', 'accuracy', 'power', 'pp', 'crit_rate', 'drain', 'flinch_chance')
@@ -447,33 +284,55 @@ pokeAPI <- function(func, ...){
 }
 ```
 
+## `Visuals`
+
+### `The Original 151: Kanto Region`
+
+To start the data exploration, I wanted to look at the generation where
+the phrase “Gotta Catch Em All” came from. What pokemon/pokemon types
+are the best in the game? Is there really a reason to picking Charizard
+over Blastoise, and is Venusaur really that useless? To start, we will
+load in the Pokedex information with our `pokeAPI` wrapper function,
+then add in a new variable called `totalstats` that is the aggregate of
+all six pokemon stats.
+
 ``` r
 kanto <- pokeAPI("gen", 1)
 kanto <- kanto %>% mutate(totalstats = hp+attack+defense+special.attack+special.defense+speed)
 head(kanto)
 ```
 
-    ##         name pokedex_id         type  ability weight hp attack defense special.attack special.defense
-    ## 1  bulbasaur          1 grass/poison overgrow     69 45     49      49             65              65
-    ## 2    ivysaur          2 grass/poison overgrow    130 60     62      63             80              80
-    ## 3   venusaur          3 grass/poison overgrow   1000 80     82      83            100             100
-    ## 4 charmander          4         fire    blaze     85 39     52      43             60              50
-    ## 5 charmeleon          5         fire    blaze    190 58     64      58             80              65
-    ## 6  charizard          6  fire/flying    blaze    905 78     84      78            109              85
-    ##   speed totalstats
-    ## 1    45        318
-    ## 2    60        405
-    ## 3    80        525
-    ## 4    65        309
-    ## 5    80        405
-    ## 6   100        534
+    ##         name pokedex_id         type  ability weight hp attack defense
+    ## 1  bulbasaur          1 grass/poison overgrow     69 45     49      49
+    ## 2    ivysaur          2 grass/poison overgrow    130 60     62      63
+    ## 3   venusaur          3 grass/poison overgrow   1000 80     82      83
+    ## 4 charmander          4         fire    blaze     85 39     52      43
+    ## 5 charmeleon          5         fire    blaze    190 58     64      58
+    ## 6  charizard          6  fire/flying    blaze    905 78     84      78
+    ##   special.attack special.defense speed totalstats
+    ## 1             65              65    45        318
+    ## 2             80              80    60        405
+    ## 3            100             100    80        525
+    ## 4             60              50    65        309
+    ## 5             80              65    80        405
+    ## 6            109              85   100        534
+
+With our data loaded, I now want to look at the top 25 strongest pokemon
+from this generation by total stats. While I anticipate most of the
+legendary pokemon being included in this list, I do want to see what
+types are the most prevalent (or combination of types).
 
 ``` r
-plot1 <- top_n(kanto, n=15, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=45))
+plot1 <- top_n(kanto, n=25, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip()
 plot1
 ```
 
 ![](README_files/figure-gfm/kanto%20strongest-1.png)<!-- -->
+
+All three starters are present, though Charizard has a slight edge.
+After looking at the typing and the Pokemon included, I wanted to see
+the spread of total stats, seeing whether the most common Pokemon total
+stat number was.
 
 ``` r
 plot2 <- ggplot(kanto, aes(x=totalstats)) + geom_histogram()
@@ -482,115 +341,338 @@ plot2
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](README_files/figure-gfm/kanto%20type-1.png)<!-- -->
+![](README_files/figure-gfm/kanto%20total%20stat-1.png)<!-- -->
+
+Next, we want to look at the typing breakdown and the count of each in
+the entire set of 151 pokemon.
 
 ``` r
-table1 <- table(kanto$type)
-knitr::kable(table1, col.names = gsub("[.]", " ", names(c("Type Combo", "Count"))))
+plot3 <- ggplot(kanto, aes(x=type, fill=type))  + geom_bar() + coord_flip()  
+plot3
 ```
 
-|                 |     |
-|:----------------|----:|
-| bug             |   3 |
-| bug/flying      |   2 |
-| bug/grass       |   2 |
-| bug/poison      |   5 |
-| dragon          |   2 |
-| dragon/flying   |   1 |
-| electric        |   6 |
-| electric/flying |   1 |
-| electric/steel  |   2 |
-| fairy           |   2 |
-| fighting        |   7 |
-| fire            |  10 |
-| fire/flying     |   2 |
-| ghost/poison    |   3 |
-| grass           |   1 |
-| grass/poison    |   9 |
-| grass/psychic   |   2 |
-| ground          |   6 |
-| ground/rock     |   2 |
-| ice/flying      |   1 |
-| ice/psychic     |   1 |
-| normal          |  12 |
-| normal/fairy    |   2 |
-| normal/flying   |   8 |
-| poison          |  10 |
-| poison/flying   |   2 |
-| poison/ground   |   2 |
-| psychic         |   7 |
-| psychic/fairy   |   1 |
-| rock/flying     |   1 |
-| rock/ground     |   4 |
-| rock/water      |   4 |
-| water           |  18 |
-| water/fighting  |   1 |
-| water/flying    |   1 |
-| water/ice       |   3 |
-| water/poison    |   2 |
-| water/psychic   |   3 |
+![](README_files/figure-gfm/kanto%20type%20count-1.png)<!-- -->
+
+There are an absurd number of water-type pokemon, with a few other types
+having high counts compared to the rest. I want to see the spread of
+`totalstat` by type and see which types are better overall for stats.
 
 ``` r
-plot3 <- ggplot(kanto, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
-plot3
+kanto_spread <- filter(kanto, type == 'water' | type == 'normal' | type == 'poison' | type == 'fire' | type == 'grass/poison')
+plot4 <- ggplot(kanto_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
+plot4
+```
+
+![](README_files/figure-gfm/specific%20kanto%20types-1.png)<!-- -->
+
+It looks like on average, fire type pokemon are overall stronger and
+will have higher overall stats than the rest of the types. Now, lets
+look at a table of all the fire type moves that are available for these
+pokemon to learn.
+
+``` r
+k_moves <- pokeAPI("type", 10)
+table1 <- table(k_moves$power, k_moves$pp)
+knitr::kable(table1, format = "pipe", caption = "Power of Fire Moves by PP")
+```
+
+|     |   1 |   5 |  10 |  15 |  20 |  25 |
+|:----|----:|----:|----:|----:|----:|----:|
+| 35  |   0 |   0 |   0 |   1 |   0 |   0 |
+| 40  |   0 |   0 |   0 |   0 |   0 |   1 |
+| 50  |   0 |   0 |   0 |   0 |   1 |   0 |
+| 60  |   0 |   0 |   0 |   1 |   1 |   1 |
+| 65  |   0 |   0 |   0 |   1 |   0 |   0 |
+| 70  |   0 |   1 |   0 |   1 |   0 |   0 |
+| 75  |   0 |   0 |   1 |   1 |   0 |   0 |
+| 80  |   0 |   0 |   2 |   2 |   0 |   0 |
+| 85  |   0 |   0 |   1 |   0 |   0 |   0 |
+| 90  |   0 |   0 |   0 |   1 |   0 |   0 |
+| 95  |   0 |   0 |   1 |   0 |   0 |   0 |
+| 100 |   0 |   5 |   1 |   0 |   0 |   0 |
+| 110 |   0 |   1 |   0 |   0 |   0 |   0 |
+| 120 |   0 |   1 |   0 |   1 |   0 |   0 |
+| 130 |   0 |   3 |   0 |   0 |   0 |   0 |
+| 150 |   0 |   4 |   0 |   0 |   0 |   0 |
+| 180 |   0 |   1 |   0 |   0 |   0 |   0 |
+
+Power of Fire Moves by PP
+
+There are a wide assortment of fire moves with power over 100. With the
+total stats being high, as well as the move strength being high on
+average as well, lets take a look at some individual stats.
+
+“A strong defense is the best offense” is most commonly stated, and in
+this case there is somewhat of a relationship between the two.
+
+``` r
+plot5 <- ggplot(kanto, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
+plot5
 ```
 
 ![](README_files/figure-gfm/attack%20v%20defense%20kanto-1.png)<!-- -->
 
+However, in the realm of Pokemon (especially with competitive battling),
+the most utilized stat is speed (Gotta Catch Em All or Gotta Go Fast?).
+In any case, we want to see the types with the most speed and see how it
+corresponds to the results we have already found.
+
 ``` r
-plot4 <- ggplot(kanto, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16, position=position_jitter(0.2)) + coord_flip() + theme(legend.position = "none")
-plot4
+plot6 <- ggplot(kanto_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
+plot6
 ```
 
-![](README_files/figure-gfm/kanto%20boxplot-1.png)<!-- -->
+![](README_files/figure-gfm/speed%20kanto-1.png)<!-- -->
+
+Fire seems to be the predominantly powerful type in the original list of
+151. WIth pokemon like `Moltres`, `Charizard`, `Flareon` and `Arcanine`,
+there are a good assortment of options to choose from, as well as
+teaching powerful moves and using them repeatedly to win battles.
+However, we know that this generation isn’t the only one present! Let’s
+take a deeper dive into one of my personal favorites: Generation 3.
+
+### `The Childhood Favorite: Hoenn Region`
+
+We will be following the same structure as the Kanto. There are a
+completely new set of pokemon to explore, and we want to answer the same
+question: Which type of pokemon is the best?
 
 ``` r
 hoenn <- pokeAPI("gen", 3)
-hoenn <- hoenn %>% mutate(totalstats = hp+attack+defense+special.attack+special.defense+speed, avg_total = (totalstats/6))
+hoenn <- hoenn %>% mutate(totalstats = hp+attack+defense+special.attack+special.defense+speed)
 head(hoenn)
 ```
 
-    ##        name pokedex_id          type  ability weight hp attack defense special.attack special.defense
-    ## 1   treecko        252         grass overgrow     50 40     45      35             65              55
-    ## 2   grovyle        253         grass overgrow    216 50     65      45             85              65
-    ## 3  sceptile        254         grass overgrow    522 70     85      65            105              85
-    ## 4   torchic        255          fire    blaze     25 45     60      40             70              50
-    ## 5 combusken        256 fire/fighting    blaze    195 60     85      60             85              60
-    ## 6  blaziken        257 fire/fighting    blaze    520 80    120      70            110              70
-    ##   speed totalstats avg_total
-    ## 1    70        310  51.66667
-    ## 2    95        405  67.50000
-    ## 3   120        530  88.33333
-    ## 4    45        310  51.66667
-    ## 5    55        405  67.50000
-    ## 6    80        530  88.33333
+    ##        name pokedex_id          type  ability weight hp attack defense
+    ## 1   treecko        252         grass overgrow     50 40     45      35
+    ## 2   grovyle        253         grass overgrow    216 50     65      45
+    ## 3  sceptile        254         grass overgrow    522 70     85      65
+    ## 4   torchic        255          fire    blaze     25 45     60      40
+    ## 5 combusken        256 fire/fighting    blaze    195 60     85      60
+    ## 6  blaziken        257 fire/fighting    blaze    520 80    120      70
+    ##   special.attack special.defense speed totalstats
+    ## 1             65              55    70        310
+    ## 2             85              65    95        405
+    ## 3            105              85   120        530
+    ## 4             70              50    45        310
+    ## 5             85              60    55        405
+    ## 6            110              70    80        530
+
+Let’s look at the strongest pokemon. As always, legendaries will be a
+good portion of the list, but let’s see if there are any surprising
+additions.
 
 ``` r
-plot5 <- top_n(hoenn, n=15, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=45))
-plot5
+plot7 <- top_n(hoenn, n=25, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip()
+plot7
 ```
 
 ![](README_files/figure-gfm/hoenn%20strongest-1.png)<!-- -->
 
+The three starters are present (Blaziken, Sceptile, and Swampert), with
+Rayquaza being the strongest legendary and pokemon overall. There are a
+lot higher total stat numbers with this generation than in Kanto, but
+the craziest find was that Slaking, a very common pokemon, has the
+second highest total stat count. Let’s look at the `totalstat` breakdown
+across all these pokemon.
+
 ``` r
-plot6 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram()
-plot6
+plot8 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram()
+plot8
 ```
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
 ![](README_files/figure-gfm/hoenn%20type-1.png)<!-- -->
 
-``` r
-plot7 <- ggplot(hoenn, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
-plot7
-```
-
-![](README_files/figure-gfm/attack%20v%20defense%20hoenn-1.png)<!-- -->
+Compared to Kanto, the Hoenn region has pokemon with higher overall
+stats. Lets check out the typing breakdown. Next, we want to look at the
+typing breakdown and the count of each in the entire set of 151 pokemon.
 
 ``` r
-plot8 <- ggplot(hoenn, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16, position=position_jitter(0.2)) + coord_flip() + theme(legend.position = "none")
-plot8
+plot9 <- ggplot(hoenn, aes(x=type, fill=type))  + geom_bar() + coord_flip()  
+plot9
 ```
 
-![](README_files/figure-gfm/hoenn%20boxplot-1.png)<!-- -->
+![](README_files/figure-gfm/hoenn%20type%20count-1.png)<!-- -->
+
+There are quite a few more type combinations that are introduced in this
+generation, with only 135 pokemon compared to Kanto’s 151. `Water`,
+`Normal`, `Psychic`, `Grass`, and `Bug` types seem to be the most
+prevalent, so we’ll dive into their stats.
+
+``` r
+hoenn_spread <- filter(hoenn, type == 'water' | type == 'normal' | type == 'grass' | type == 'psychic' | type == 'bug')
+plot10 <- ggplot(hoenn_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
+plot10
+```
+
+![](README_files/figure-gfm/specific%20hoenn%20types-1.png)<!-- -->
+
+`Water` has a very high range (primarily due to legendary pokemon like
+Kyogre), but `Psychic` typing has the highest overall mean. Let’s dive
+into the available moves.
+
+``` r
+h_moves <- pokeAPI("type", 10)
+table2 <- table(h_moves$power, k_moves$pp)
+knitr::kable(table2, format = "pipe", caption = "Power of Psychic Moves by PP")
+```
+
+|     |   1 |   5 |  10 |  15 |  20 |  25 |
+|:----|----:|----:|----:|----:|----:|----:|
+| 35  |   0 |   0 |   0 |   1 |   0 |   0 |
+| 40  |   0 |   0 |   0 |   0 |   0 |   1 |
+| 50  |   0 |   0 |   0 |   0 |   1 |   0 |
+| 60  |   0 |   0 |   0 |   1 |   1 |   1 |
+| 65  |   0 |   0 |   0 |   1 |   0 |   0 |
+| 70  |   0 |   1 |   0 |   1 |   0 |   0 |
+| 75  |   0 |   0 |   1 |   1 |   0 |   0 |
+| 80  |   0 |   0 |   2 |   2 |   0 |   0 |
+| 85  |   0 |   0 |   1 |   0 |   0 |   0 |
+| 90  |   0 |   0 |   0 |   1 |   0 |   0 |
+| 95  |   0 |   0 |   1 |   0 |   0 |   0 |
+| 100 |   0 |   5 |   1 |   0 |   0 |   0 |
+| 110 |   0 |   1 |   0 |   0 |   0 |   0 |
+| 120 |   0 |   1 |   0 |   1 |   0 |   0 |
+| 130 |   0 |   3 |   0 |   0 |   0 |   0 |
+| 150 |   0 |   4 |   0 |   0 |   0 |   0 |
+| 180 |   0 |   1 |   0 |   0 |   0 |   0 |
+
+Power of Psychic Moves by PP
+
+It seems that there are also a strong assortment of psychic moves for
+the pokemon in this generation (and by extension, all generations), to
+use. The types listed (specifically `Psychic` and `Bug`) have more of a
+benefit with high `special attack`, and pokemon that are usually
+battling against these types want high `special defense`. Let’s check to
+see the correlation between the two.
+
+``` r
+plot11 <- ggplot(hoenn, aes(x=special.attack, y=special.defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
+plot11
+```
+
+![](README_files/figure-gfm/SpA%20v%20SpD%20hoenn-1.png)<!-- -->
+
+The correlation is a lot stronger here, though as always, `speed` is the
+most valuable stat. Let’s see how it compares across the most popular
+types.
+
+``` r
+plot12 <- ggplot(hoenn_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
+plot12
+```
+
+![](README_files/figure-gfm/speed%20hoenn-1.png)<!-- -->
+
+The speed for `psychic` types edges out the others, but the range is
+quite small. All in all, psychic types such as `Metagross`, `Latios`,
+`Latias`, and `Jirachi` seem to still have a lot of power in this
+generation. We’re going to take a look at one last generation, just to
+tie all of these results together and get a base understanding of which
+type/pokemon are strong overall (not just in generation). We’re looking
+at the generation that is lauded as the most popular one of all:
+Generation 4.
+
+### `The People's Champ: Sinnoh Region`
+
+``` r
+sinnoh <- pokeAPI("gen", 4)
+sinnoh <- sinnoh %>% mutate(totalstats = hp+attack+defense+special.attack+special.defense+speed)
+head(sinnoh)
+```
+
+    ##        name pokedex_id          type  ability weight hp attack defense
+    ## 1   turtwig        387         grass overgrow    102 55     68      64
+    ## 2    grotle        388         grass overgrow    970 75     89      85
+    ## 3  torterra        389  grass/ground overgrow   3100 95    109     105
+    ## 4  chimchar        390          fire    blaze     62 44     58      44
+    ## 5  monferno        391 fire/fighting    blaze    220 64     78      52
+    ## 6 infernape        392 fire/fighting    blaze    550 76    104      71
+    ##   special.attack special.defense speed totalstats
+    ## 1             45              55    31        318
+    ## 2             55              65    36        405
+    ## 3             75              85    56        525
+    ## 4             58              44    61        309
+    ## 5             78              52    81        405
+    ## 6            104              71   108        534
+
+Let’s look at the strongest pokemon. As always, legendaries will be a
+good portion of the list, but let’s see if there are any surprising
+additions.
+
+``` r
+plot13 <- top_n(sinnoh, n=25, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip()
+plot13
+```
+
+![](README_files/figure-gfm/sinnoh%20strongest-1.png)<!-- -->
+
+Again, the three starters and many of the legendaries are present. I
+have half a mind to not count `Arceus` since it is the literal god of
+pokemon and can technically be any single type of pokemon. Many of the
+pokemon on this list have unique typing or are pseudo/actual legendary
+pokemon. With the even smaller pool of pokemon present that are unique
+to this generation, it will be a bit tougher to analyze type. Let’s look
+at the `totalstat` spread.
+
+``` r
+plot14 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram()
+plot14
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](README_files/figure-gfm/sinnoh%20type-1.png)<!-- -->
+
+There’s a bit of a higher concentration of pokemon in the 400-500 range,
+whereas in Hoenn there were more pokemon in the 300-400 range. Again,
+this can be because of the higher proportion of legendary pokemon.
+
+``` r
+plot15 <- ggplot(sinnoh, aes(x=type, fill=type))  + geom_bar() + coord_flip()  
+plot15
+```
+
+![](README_files/figure-gfm/sinnoh%20type%20count-1.png)<!-- -->
+
+The spread seems a bit similar to Hoenn, with `Water`, `Normal`,
+`Psychic`, `Grass`, and `Electric` being the most prevalent. Time to
+dive into their stats.
+
+``` r
+sinnoh_spread <- filter(sinnoh, type == 'water' | type == 'normal' | type == 'grass' | type == 'psychic' | type == 'electric')
+plot16 <- ggplot(sinnoh_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
+plot16
+```
+
+![](README_files/figure-gfm/specific%20sinnoh%20types-1.png)<!-- -->
+
+`Normal` has the highest spread but `Psychic` has the highest overall
+mean for `totalstats` (even though there weren’t many observations).
+Let’s check the relationship between both `attack`/`defense`/ and
+`special attack`/`special defense`.
+
+``` r
+plot17 <- ggplot(sinnoh, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
+plot17
+```
+
+![](README_files/figure-gfm/attack%20v%20defense%20sinnoh-1.png)<!-- -->
+
+``` r
+plot18 <- ggplot(sinnoh, aes(x=special.attack, y=special.defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
+plot18
+```
+
+![](README_files/figure-gfm/SpA%20v%20SpD%20sinnoh-1.png)<!-- -->
+
+Lastly, let’s check the `speed` breakdown of the types we focused on.
+
+``` r
+plot19 <- ggplot(sinnoh_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
+plot19
+```
+
+![](README_files/figure-gfm/speed%20sinnoh-1.png)<!-- -->

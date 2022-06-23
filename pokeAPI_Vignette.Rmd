@@ -27,36 +27,9 @@ library(ggplot2)
 library(ggpubr)
 ```
 
-## `pokeAPI Functions`
+## pokeAPI Functions
 
 This section is dedicated to the functions I've created to pull data from this API. 
-
-
-
-### `Game Version`
-
-This function pulls the relevant version information of any existing game from the `version` endpoint. It returns a `tibble` listing the name of the game, the region, and which generation it falls into. It takes a numeric input from `1` to `34`, which is the order of each game being introduced.
-```{r}
-version <- function(game) {
-  # Checks if a valid input has been entered into the function.
-  if ((game > 34) || (game < 1)) {
-    stop("This is an invalid game. Please refine search.")
-  }
-  
-  #Set URL for the version endpoint in the API.
-  respGAME <- GET(paste0("http://pokeapi.co/api/v2/version/", game))
-  conGAME <- content(respGAME)
-  ver <- conGAME$version_group$url %>% GET() %>% content()
-  
-  #Create a tibble that prints basic version information based on the function input.
-  output <- tibble(
-    name = ver$name,
-    region = ifelse(is_empty(ver$region), NA, ver$regions[[1]]$name),
-    generation = ver$generation$name
-  )
-  return(output)
-}
-```
 
 
 ### `Generation Pokedex`
@@ -259,7 +232,7 @@ pokeAPI <- function(func, ...){
 
 
 
-## `Visuals`
+## Visuals
 
 ### `The Original 151: Kanto Region`
 

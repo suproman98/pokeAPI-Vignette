@@ -24,13 +24,13 @@ the function inputs correspond to the data you are trying to pull.
 
 ## Requirements
 
-To interact with this API, a few packages must be installed.
-+`jsonlite`: Works with JSON in R and is useful for parsing data and
-interacting with a web API. +`httr`: Provides useful tools for working
-with HTTP. +`tidyverse`: Collection of R packages that contribute
-heavily to API interaction and data visualization. +`knitr`: Provides
-tools for dynamic reporting in R. +`dplyr`: Package that provides tools
-for working with data frames. +`ggplot2`: Powerful for complex data
+To interact with this API, a few packages must be installed. 1.
+jsonlite: Works with JSON in R and is useful for parsing data and
+interacting with a web API. 2. httr: Provides useful tools for working
+with HTTP. 3. tidyverse: Collection of R packages that contribute
+heavily to API interaction and data visualization. 4. knitr: Provides
+tools for dynamic reporting in R. 5. dplyr: Package that provides tools
+for working with data frames. 6. ggplot2: Powerful for complex data
 visualizations.
 
 ``` r

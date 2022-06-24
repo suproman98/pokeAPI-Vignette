@@ -4,7 +4,7 @@ author: "Supro Debnath"
 date: '2022-06-18'
 ---
 
-This vignette is a step-by-step guide to interacting with the [pokeAPI](https://pokeapi.co/docs/v2#info). There are a few functions in here that explore the data present, as well as some visualizations that highlight interesting patterns in the world of pokemon. Most of the ids are represented as numeric (i.e. `Generation 1` referring to the Kanto pokemon, or `Version 8` referring to the Hoenn region). For that reason, if you intend on using any of these functions, please be mindful of how the function inputs correspond to the data you are trying to pull. 
+This vignette is a step-by-step guide to interacting with the [pokeAPI](https://pokeapi.co/docs/v2#info). There are a few functions in here that explore the data present, as well as some visualizations that highlight interesting patterns in the world of pokemon. Most of the ids are represented as numeric (i.e. `Generation 1` referring to the Kanto pokemon, or `Type 3` referring to the `Flying` type). For that reason, if you intend on using any of these functions, please be mindful of how the function inputs correspond to the data you are trying to pull. 
 
 ## Requirements
 
@@ -17,7 +17,7 @@ To interact with this API, a few packages must be installed.
 * `ggplot2`: Powerful for complex data visualizations.
 
 
-```{r libraries, eval=FALSE, message=FALSE, warning=FALSE}
+```{r libraries, message=FALSE, warning=FALSE}
 library(jsonlite)
 library(httr)
 library(tidyverse)
@@ -29,8 +29,7 @@ library(ggpubr)
 
 ## pokeAPI Functions
 
-This section is dedicated to the functions I've created to pull data from this API. 
-
+This section is dedicated to the two functions I've created to pull data from this API. This API had a lot of information I found irrelevant for my analysis, as I want to hone in on which pokemon are the best and which type is the most prevalent.
 
 ### `Generation Pokedex`
 
@@ -53,6 +52,9 @@ gendex <- function(gen) {
   #Create a function that will parse through the URLs in the move page.
   pokePULL <- function(url) {
     specCON <- content(GET(url), "parsed")
+  
+  #Call in the variable capture_rate from the pokemon_species URL.
+    catch_rate <- specCON$capture_rate
     
   #Parse through the varieties URL and get relevant information.
     pokeURL <- specCON$varieties[[1]]$pokemon$url
@@ -88,7 +90,8 @@ gendex <- function(gen) {
         type = type,
         ability = ability,
         weight = pokeCON$weight,
-        as.list(stats)
+        as.list(stats),
+        catch_rate = round((catch_rate/255)*100)
       )
     )
   }
@@ -97,10 +100,10 @@ gendex <- function(gen) {
   pokeLIST <- lapply(df_pokeGEN$url, pokePULL)
   pokedex <- do.call(rbind.data.frame, c(pokeLIST, stringsAsFactors = FALSE))
   pokedex <- pokedex %>% arrange(pokedex_id)
+  colnames(pokedex)[12] <- "catch_rate_pct"
   return(pokedex)
 }
 ```
-
 
 
 ### `TypeDex`
@@ -159,49 +162,9 @@ typedex <- function(type) {
 ```
 
 
-
-### `Region`
-
-```{r}
-region <- function(reg) {
-  if ((reg > 8) || (reg < 1)) {
-    stop("This is a non-existent region. Please refine search or submit a numeric input from 1 to 796.")
-  }
-  
-  respREG <- GET(paste0("https://pokeapi.co/api/v2/region/", reg))
-  conREG <- content(respREG, "parsed")
-  df_pokeREG <- do.call(rbind.data.frame, c(conREG$locations, stringsAsFactors = FALSE))
-  
-  
-  locPULL <- function(url) {
-    locCON <- content(GET(url), "parsed")
-    areaURL <- locCON$areas[[1]]$url
-    areaCON <- content(GET(areaURL), "parsed")
-
-    return(
-      c(
-        name = areaCON$name,
-        area_id = areaCON$id,
-        pokemon = areaCON$pokemon_encounters$pokemon$name,
-        chance = areaCON$pokemon_encounters$version_details$encounter_details$chance,
-        level = areaCON$pokemon_encounters$version_details$encounter_details$max_level
-      )
-    )
-  }
-  
-  regLIST <- lapply(df_pokeREG$url, locPULL)
-  regdex <- do.call(rbind.data.frame, c(regLIST, stringsAsFactors = FALSE))
-#  locdex <- pokedex %>% arrange(pokedex_id)
-  return(regdex)
-}
-```
-
-
-
-
-
-
 ### `pokeAPI Wrapper Function`
+
+Wrapper function for all the functions created.
 ```{r}
 pokeAPI <- function(func, ...){
   ###
@@ -212,10 +175,7 @@ pokeAPI <- function(func, ...){
   
   # Find and call the appropriate function using conditional logic.
   
-  if (func == "version"){
-    output <- version(...)
-  }
-  else if (func == "gen"){
+  if (func == "gen"){
     output <- gendex(...)
   }
   else if (func == "type"){
@@ -245,27 +205,37 @@ head(kanto)
 
 With our data loaded, I now want to look at the top 25 strongest pokemon from this generation by total stats. While I anticipate most of the legendary pokemon being included in this list, I do want to see what types are the most prevalent (or combination of types).
 ```{r kanto strongest}
-plot1 <- top_n(kanto, n=25, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip()
+kanto_strongest <- top_n(kanto, n=25, totalstats)
+
+plot1 <- ggplot(kanto_strongest, aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip() + ggtitle("Strongest Kanto Pokemon") + xlab("Pokemon Name") + ylab("Total Stats")  + theme(plot.title = element_text(hjust = 0.5))
 plot1
 ```
 
+Let's dive into the chances of catching these pokemon in the wild (not taking into account pokeball type).
+```{r kanto catch rate}
+plot2 <- ggplot(kanto_strongest, aes(x=name, y=catch_rate_pct, fill=type)) + geom_bar(stat='identity') + coord_flip() + ggtitle("Strongest Kanto Pokemon Catch Rate") + xlab("Pokemon Name") + ylab("Catch Rate %")  + theme(plot.title = element_text(hjust = 0.5))
+plot2
+```
+
+
 All three starters are present, though Charizard has a slight edge. After looking at the typing and the Pokemon included, I wanted to see the spread of total stats, seeing whether the most common Pokemon total stat number was.
 ```{r kanto total stat}
-plot2 <- ggplot(kanto, aes(x=totalstats)) + geom_histogram()
-plot2
+plot3 <- ggplot(kanto, aes(x=totalstats)) + geom_histogram() + ggtitle("Total Stat Spread") + xlab("Total Stats") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
+plot3
 ```
 
 Next, we want to look at the typing breakdown and the count of each in the entire set of 151 pokemon. 
 ```{r kanto type count}
-plot3 <- ggplot(kanto, aes(x=type, fill=type))  + geom_bar() + coord_flip()  
-plot3
+plot4 <- ggplot(kanto, aes(x=type, fill=type))  + geom_bar() + coord_flip() + ggtitle("Kanto Type Combinations") + xlab("Types") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
+plot4
 ```
 
 There are an absurd number of water-type pokemon, with a few other types having high counts compared to the rest. I want to see the spread of `totalstat` by type and see which types are better overall for stats.
 ```{r specific kanto types}
 kanto_spread <- filter(kanto, type == 'water' | type == 'normal' | type == 'poison' | type == 'fire' | type == 'grass/poison')
-plot4 <- ggplot(kanto_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
-plot4
+
+plot5 <- ggplot(kanto_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5)) + ggtitle("Total Stat Spread of Most Prevalent Types") + xlab("Total Stats") + ylab("Pokemon Type") 
+plot5
 ```
 
 It looks like on average, fire type pokemon are overall stronger and will have higher overall stats than the rest of the types. Now, lets look at a table of all the fire type moves that are available for these pokemon to learn.
@@ -280,14 +250,14 @@ There are a wide assortment of fire moves with power over 100. With the total st
 
 "A strong defense is the best offense" is most commonly stated, and in this case there is somewhat of a relationship between the two.
 ```{r attack v defense kanto, message=FALSE, warning=FALSE}
-plot5 <- ggplot(kanto, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
-plot5
+plot6 <- ggplot(kanto, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided") + ggtitle("Attack v Defense Correlation") + xlab("Attack") + ylab("Defense") + theme(plot.title = element_text(hjust = 0.5))
+plot6
 ```
 
 However, in the realm of Pokemon (especially with competitive battling), the most utilized stat is speed (Gotta Catch Em All or Gotta Go Fast?). In any case, we want to see the types with the most speed and see how it corresponds to the results we have already found.
 ```{r speed kanto}
-plot6 <- ggplot(kanto_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
-plot6
+plot7 <- ggplot(kanto_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none") + ggtitle("Kanto Speed of Most Prevalent Types") + xlab("Types") + ylab("Speed Stat") + theme(plot.title = element_text(hjust = 0.5)) 
+plot7
 ```
 
 Fire seems to be the predominantly powerful type in the original list of 151. WIth pokemon like `Moltres`, `Charizard`, `Flareon` and `Arcanine`, there are a good assortment of options to choose from, as well as teaching powerful moves and using them repeatedly to win battles. However, we know that this generation isn't the only one present! Let's take a deeper dive into one of my personal favorites: Generation 3.
@@ -304,27 +274,36 @@ head(hoenn)
 
 Let's look at the strongest pokemon. As always, legendaries will be a good portion of the list, but let's see if there are any surprising additions.
 ```{r hoenn strongest}
-plot7 <- top_n(hoenn, n=25, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip()
-plot7
+hoenn_strongest <- top_n(hoenn, n=25, totalstats)
+
+plot8 <- ggplot(hoenn_strongest, aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip() + ggtitle("Strongest Hoenn Pokemon") + xlab("Pokemon Name") + ylab("Total Stats") + theme(plot.title = element_text(hjust = 0.5))
+plot8
 ```
 
-The three starters are present (Blaziken, Sceptile, and Swampert), with Rayquaza being the strongest legendary and pokemon overall. There are a lot higher total stat numbers with this generation than in Kanto, but the craziest find was that Slaking, a very common pokemon, has the second highest total stat count. Let's look at the `totalstat` breakdown across all these pokemon.
+The three starters are present (Blaziken, Sceptile, and Swampert), with Rayquaza being the strongest legendary and pokemon overall. There are a lot higher total stat numbers with this generation than in Kanto, but the craziest find was that Slaking, a very common pokemon, has the second highest total stat count. We'll dive in further by looking at the `catch rate`.
+```{r hoenn catch rate}
+plot9 <- ggplot(hoenn_strongest, aes(x=name, y=catch_rate_pct, fill=type)) + geom_bar(stat='identity') + coord_flip() + ggtitle("Strongest Hoenn Pokemon Catch Rate") + xlab("Pokemon Name") + ylab("Catch Rate %") + theme(plot.title = element_text(hjust = 0.5))
+plot9
+```
+
+`Slaking` actually has a relatively decent `catch rate`, while pokemon like `Milotic`, `Claydol`, and `Wailord` are pretty high in `catch rate` compared to the rest of the list (makes sense, since a good number of those pokemon are legendaries. Let's look at the `totalstat` breakdown across all these pokemon.
 ```{r hoenn type}
-plot8 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram()
-plot8
+plot10 <- ggplot(hoenn, aes(x=totalstats)) + geom_histogram() + ggtitle("Total Stat Spread") + xlab("Total Stats") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
+plot10
 ```
 
 Compared to Kanto, the Hoenn region has pokemon with higher overall stats. Lets check out the typing breakdown. Next, we want to look at the typing breakdown and the count of each in the entire set of 151 pokemon. 
 ```{r hoenn type count}
-plot9 <- ggplot(hoenn, aes(x=type, fill=type))  + geom_bar() + coord_flip()  
-plot9
+plot11 <- ggplot(hoenn, aes(x=type, fill=type)) + geom_bar() + coord_flip() + ggtitle("Hoenn Type Combinations") + xlab("Types") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
+plot11
 ```
 
 There are quite a few more type combinations that are introduced in this generation, with only 135 pokemon compared to Kanto's 151. `Water`, `Normal`, `Psychic`, `Grass`, and `Bug` types seem to be the most prevalent, so we'll dive into their stats.
 ```{r specific hoenn types}
 hoenn_spread <- filter(hoenn, type == 'water' | type == 'normal' | type == 'grass' | type == 'psychic' | type == 'bug')
-plot10 <- ggplot(hoenn_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
-plot10
+
+plot12 <- ggplot(hoenn_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5)) + ggtitle("Total Stat Spread of Most Prevalent Types") + xlab("Total Stats") + ylab("Pokemon Type") 
+plot12
 ```
 
 `Water` has a very high range (primarily due to legendary pokemon like Kyogre), but `Psychic` typing has the highest overall mean. Let's dive into the available moves.
@@ -336,17 +315,17 @@ knitr::kable(table2, format = "pipe", caption = "Power of Psychic Moves by PP")
 
 It seems that there are also a strong assortment of psychic moves for the pokemon in this generation (and by extension, all generations), to use. The types listed (specifically `Psychic` and `Bug`) have more of a benefit with high `special attack`, and pokemon that are usually battling against these types want high `special defense`. Let's check to see the correlation between the two.
 ```{r SpA v SpD hoenn, message=FALSE, warning=FALSE}
-plot11 <- ggplot(hoenn, aes(x=special.attack, y=special.defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
-plot11
+plot13 <- ggplot(hoenn, aes(x=special.attack, y=special.defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided") + ggtitle("Special Attack v Special Defense Correlation") + xlab("Special Attack") + ylab("Special Defense") + theme(plot.title = element_text(hjust = 0.5))
+plot13
 ```
 
 The correlation is a lot stronger here, though as always, `speed` is the most valuable stat. Let's see how it compares across the most popular types. 
 ```{r speed hoenn}
-plot12 <- ggplot(hoenn_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
-plot12
+plot14 <- ggplot(hoenn_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none") + ggtitle("Hoenn Speed of Most Prevalent Types") + xlab("Types") + ylab("Speed Stat") + theme(plot.title = element_text(hjust = 0.5))
+plot14
 ```
 
-The speed for `psychic` types edges out the others, but the range is quite small. All in all, psychic types such as `Metagross`, `Latios`, `Latias`, and `Jirachi` seem to still have a lot of power in this generation. We're going to take a look at one last generation, just to tie all of these results together and get a base understanding of which type/pokemon are strong overall (not just in generation). We're looking at the generation that is lauded as the most popular one of all: Generation 4.
+The speed for `Psychic` types edges out the others, but the range is quite small. All in all, psychic types such as `Metagross`, `Latios`, `Latias`, and `Jirachi` seem to still have a lot of power in this generation. We're going to take a look at one last generation, just to tie all of these results together and get a base understanding of which type/pokemon are strong overall (not just in generation). We're looking at the generation that is lauded as the most popular one of all: Generation 4.
 
 ### `The People's Champ: Sinnoh Region`
 
@@ -358,44 +337,53 @@ head(sinnoh)
 
 Let's look at the strongest pokemon. As always, legendaries will be a good portion of the list, but let's see if there are any surprising additions.
 ```{r sinnoh strongest}
-plot13 <- top_n(sinnoh, n=25, totalstats) %>% ggplot(., aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip()
-plot13
+sinnoh_strongest <- top_n(sinnoh, n=25, totalstats)
+
+plot15 <- ggplot(sinnoh_strongest, aes(x=name, y=totalstats, fill=type)) + geom_bar(stat='identity') + coord_flip() + ggtitle("Strongest Sinnoh Pokemon") + xlab("Pokemon Name") + ylab("Total Stats") + theme(plot.title = element_text(hjust = 0.5))
+plot15
 ```
 
-Again, the three starters and many of the legendaries are present. I have half a mind to not count `Arceus` since it is the literal god of pokemon and can technically be any single type of pokemon. Many of the pokemon on this list have unique typing or are pseudo/actual legendary pokemon. With the even smaller pool of pokemon present that are unique to this generation, it will be a bit tougher to analyze type. Let's look at the `totalstat` spread.
+Again, the three starters and many of the legendaries are present. I have half a mind to not count `Arceus` since it is the literal god of pokemon and can technically be any single type of pokemon. Many of the pokemon on this list have unique typing or are pseudo/actual legendary pokemon. With the even smaller pool of pokemon present that are unique to this generation, it will be a bit tougher to analyze type. 
+```{r sinnoh catch rate}
+plot16 <- ggplot(sinnoh_strongest, aes(x=name, y=catch_rate_pct, fill=type)) + geom_bar(stat='identity') + coord_flip() + ggtitle("Strongest Sinnoh Pokemon Catch Rate") + xlab("Pokemon Name") + ylab("Catch Rate %") + theme(plot.title = element_text(hjust = 0.5))
+plot16
+```
+
+Interestingly, `Probopass` and `Hippowdon` are the two pokemon with the highest `catch rate`. Let's look at the `totalstat` spread.
 ```{r sinnoh type}
-plot14 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram()
-plot14
+plot17 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram() + xlab("Total Stats") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
+plot17
 ```
 
 There's a bit of a higher concentration of pokemon in the 400-500 range, whereas in Hoenn there were more pokemon in the 300-400 range. Again, this can be because of the higher proportion of legendary pokemon.
 
 ```{r sinnoh type count}
-plot15 <- ggplot(sinnoh, aes(x=type, fill=type))  + geom_bar() + coord_flip()  
-plot15
+plot18 <- ggplot(sinnoh, aes(x=type, fill=type))  + geom_bar() + coord_flip() + ggtitle("Sinnoh Type Combinations") + xlab("Types") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
+plot18
 ```
 
 The spread seems a bit similar to Hoenn, with `Water`, `Normal`, `Psychic`, `Grass`, and `Electric` being the most prevalent. Time to dive into their stats.
 ```{r specific sinnoh types}
 sinnoh_spread <- filter(sinnoh, type == 'water' | type == 'normal' | type == 'grass' | type == 'psychic' | type == 'electric')
-plot16 <- ggplot(sinnoh_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
-plot16
+
+plot19 <- ggplot(sinnoh_spread, aes(x=type, y=totalstats, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none", plot.title = element_text(hjust = 0.5)) + ggtitle("Total Stat Spread of Most Prevalent Types") + xlab("Total Stats")
+plot19
 ```
 
 `Normal` has the highest spread but `Psychic` has the highest overall mean for `totalstats` (even though there weren't many observations). Let's check the relationship between both `attack`/`defense`/ and `special attack`/`special defense`.
 ```{r attack v defense sinnoh, message=FALSE, warning=FALSE}
-plot17 <- ggplot(sinnoh, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
-plot17
+plot20 <- ggplot(sinnoh, aes(x=attack, y=defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided") + ggtitle("Attack v Defense Correlation") + xlab("Attack") + ylab("Defense") + theme(plot.title = element_text(hjust = 0.5))
+plot20
 ```
 
 ```{r SpA v SpD sinnoh, message=FALSE, warning=FALSE}
-plot18 <- ggplot(sinnoh, aes(x=special.attack, y=special.defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided")
-plot18
+plot21 <- ggplot(sinnoh, aes(x=special.attack, y=special.defense)) + geom_point(stat='identity') + geom_smooth() + stat_cor(mapping = NULL, data = NULL, method = "pearson", alternative = "two.sided") + ggtitle("Special Attack v Special Defense Correlation") + xlab("Special Attack") + ylab("Special Defense") + theme(plot.title = element_text(hjust = 0.5))
+plot21
 ```
 
 Lastly, let's check the `speed` breakdown of the types we focused on.
 ```{r speed sinnoh}
-plot19 <- ggplot(sinnoh_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none")
-plot19
+plot22 <- ggplot(sinnoh_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(show.legend = FALSE) + geom_jitter(shape=16) + coord_flip() + theme(legend.position = "none") + ggtitle("Kanto Speed of Most Prevalent Types") + xlab("Types") + ylab("Speed Stat") + theme(plot.title = element_text(hjust = 0.5))
+plot22
 ```
 

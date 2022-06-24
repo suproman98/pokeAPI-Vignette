@@ -14,8 +14,8 @@ Supro Debnath
     -   [`The People's Champ: Sinnoh Region`](#the-peoples-champ-sinnoh-region)
 
 This vignette is a step-by-step guide to interacting with the
-[pokeAPI](https://pokeapi.co/docs/v2#info). There are a few functions in
-here that explore the data present, as well as some visualizations that
+[pokeAPI](https://pokeapi.co/docs/v2). There are a few functions in here
+that explore the data present, as well as some visualizations that
 highlight interesting patterns in the world of pokemon. Most of the ids
 are represented as numeric (i.e. `Generation 1` referring to the Kanto
 pokemon, or `Type 3` referring to the `Flying` type). For that reason,
@@ -24,14 +24,14 @@ the function inputs correspond to the data you are trying to pull.
 
 ## Requirements
 
-To interact with this API, a few packages must be installed. \*
+To interact with this API, a few packages must be installed. +
 `jsonlite`: Works with JSON in R and is useful for parsing data and
-interacting with a web API. \* `httr`: Provides useful tools for working
-with HTTP. \* `tidyverse`: Collection of R packages that contribute
-heavily to API interaction and data visualization. \* `knitr`: Provides
-tools for dynamic reporting in R. \* `dplyr`: Package that provides
-tools for working with data frames. \* `ggplot2`: Powerful for complex
-data visualizations.
+interacting with a web API. + `httr`: Provides useful tools for working
+with HTTP. + `tidyverse`: Collection of R packages that contribute
+heavily to API interaction and data visualization. + `knitr`: Provides
+tools for dynamic reporting in R. + `dplyr`: Package that provides tools
+for working with data frames. + `ggplot2`: Powerful for complex data
+visualizations.
 
 ``` r
 library(jsonlite)
@@ -240,20 +240,20 @@ kanto <- kanto %>% mutate(totalstats = hp+attack+defense+special.attack+special.
 head(kanto)
 ```
 
-    ##         name pokedex_id         type  ability weight hp attack defense
-    ## 1  bulbasaur          1 grass/poison overgrow     69 45     49      49
-    ## 2    ivysaur          2 grass/poison overgrow    130 60     62      63
-    ## 3   venusaur          3 grass/poison overgrow   1000 80     82      83
-    ## 4 charmander          4         fire    blaze     85 39     52      43
-    ## 5 charmeleon          5         fire    blaze    190 58     64      58
-    ## 6  charizard          6  fire/flying    blaze    905 78     84      78
-    ##   special.attack special.defense speed catch_rate_pct totalstats
-    ## 1             65              65    45             18        318
-    ## 2             80              80    60             18        405
-    ## 3            100             100    80             18        525
-    ## 4             60              50    65             18        309
-    ## 5             80              65    80             18        405
-    ## 6            109              85   100             18        534
+    ##         name pokedex_id         type  ability weight hp attack defense special.attack special.defense speed
+    ## 1  bulbasaur          1 grass/poison overgrow     69 45     49      49             65              65    45
+    ## 2    ivysaur          2 grass/poison overgrow    130 60     62      63             80              80    60
+    ## 3   venusaur          3 grass/poison overgrow   1000 80     82      83            100             100    80
+    ## 4 charmander          4         fire    blaze     85 39     52      43             60              50    65
+    ## 5 charmeleon          5         fire    blaze    190 58     64      58             80              65    80
+    ## 6  charizard          6  fire/flying    blaze    905 78     84      78            109              85   100
+    ##   catch_rate_pct totalstats
+    ## 1             18        318
+    ## 2             18        405
+    ## 3             18        525
+    ## 4             18        309
+    ## 5             18        405
+    ## 6             18        534
 
 With our data loaded, I now want to look at the top 25 strongest pokemon
 from this generation by total stats. While I anticipate most of the
@@ -394,20 +394,20 @@ hoenn <- hoenn %>% mutate(totalstats = hp+attack+defense+special.attack+special.
 head(hoenn)
 ```
 
-    ##        name pokedex_id          type  ability weight hp attack defense
-    ## 1   treecko        252         grass overgrow     50 40     45      35
-    ## 2   grovyle        253         grass overgrow    216 50     65      45
-    ## 3  sceptile        254         grass overgrow    522 70     85      65
-    ## 4   torchic        255          fire    blaze     25 45     60      40
-    ## 5 combusken        256 fire/fighting    blaze    195 60     85      60
-    ## 6  blaziken        257 fire/fighting    blaze    520 80    120      70
-    ##   special.attack special.defense speed catch_rate_pct totalstats
-    ## 1             65              55    70             18        310
-    ## 2             85              65    95             18        405
-    ## 3            105              85   120             18        530
-    ## 4             70              50    45             18        310
-    ## 5             85              60    55             18        405
-    ## 6            110              70    80             18        530
+    ##        name pokedex_id          type  ability weight hp attack defense special.attack special.defense speed
+    ## 1   treecko        252         grass overgrow     50 40     45      35             65              55    70
+    ## 2   grovyle        253         grass overgrow    216 50     65      45             85              65    95
+    ## 3  sceptile        254         grass overgrow    522 70     85      65            105              85   120
+    ## 4   torchic        255          fire    blaze     25 45     60      40             70              50    45
+    ## 5 combusken        256 fire/fighting    blaze    195 60     85      60             85              60    55
+    ## 6  blaziken        257 fire/fighting    blaze    520 80    120      70            110              70    80
+    ##   catch_rate_pct totalstats
+    ## 1             18        310
+    ## 2             18        405
+    ## 3             18        530
+    ## 4             18        310
+    ## 5             18        405
+    ## 6             18        530
 
 Let’s look at the strongest pokemon. As always, legendaries will be a
 good portion of the list, but let’s see if there are any surprising
@@ -550,20 +550,20 @@ sinnoh <- sinnoh %>% mutate(totalstats = hp+attack+defense+special.attack+specia
 head(sinnoh)
 ```
 
-    ##        name pokedex_id          type  ability weight hp attack defense
-    ## 1   turtwig        387         grass overgrow    102 55     68      64
-    ## 2    grotle        388         grass overgrow    970 75     89      85
-    ## 3  torterra        389  grass/ground overgrow   3100 95    109     105
-    ## 4  chimchar        390          fire    blaze     62 44     58      44
-    ## 5  monferno        391 fire/fighting    blaze    220 64     78      52
-    ## 6 infernape        392 fire/fighting    blaze    550 76    104      71
-    ##   special.attack special.defense speed catch_rate_pct totalstats
-    ## 1             45              55    31             18        318
-    ## 2             55              65    36             18        405
-    ## 3             75              85    56             18        525
-    ## 4             58              44    61             18        309
-    ## 5             78              52    81             18        405
-    ## 6            104              71   108             18        534
+    ##        name pokedex_id          type  ability weight hp attack defense special.attack special.defense speed
+    ## 1   turtwig        387         grass overgrow    102 55     68      64             45              55    31
+    ## 2    grotle        388         grass overgrow    970 75     89      85             55              65    36
+    ## 3  torterra        389  grass/ground overgrow   3100 95    109     105             75              85    56
+    ## 4  chimchar        390          fire    blaze     62 44     58      44             58              44    61
+    ## 5  monferno        391 fire/fighting    blaze    220 64     78      52             78              52    81
+    ## 6 infernape        392 fire/fighting    blaze    550 76    104      71            104              71   108
+    ##   catch_rate_pct totalstats
+    ## 1             18        318
+    ## 2             18        405
+    ## 3             18        525
+    ## 4             18        309
+    ## 5             18        405
+    ## 6             18        534
 
 Let’s look at the strongest pokemon. As always, legendaries will be a
 good portion of the list, but let’s see if there are any surprising

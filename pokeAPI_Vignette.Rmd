@@ -4,17 +4,17 @@ author: "Supro Debnath"
 date: '2022-06-18'
 ---
 
-This vignette is a step-by-step guide to interacting with the [pokeAPI](https://pokeapi.co/docs/v2#info). There are a few functions in here that explore the data present, as well as some visualizations that highlight interesting patterns in the world of pokemon. Most of the ids are represented as numeric (i.e. `Generation 1` referring to the Kanto pokemon, or `Type 3` referring to the `Flying` type). For that reason, if you intend on using any of these functions, please be mindful of how the function inputs correspond to the data you are trying to pull. 
+This vignette is a step-by-step guide to interacting with the [pokeAPI](https://pokeapi.co/docs/v2). There are a few functions in here that explore the data present, as well as some visualizations that highlight interesting patterns in the world of pokemon. Most of the ids are represented as numeric (i.e. `Generation 1` referring to the Kanto pokemon, or `Type 3` referring to the `Flying` type). For that reason, if you intend on using any of these functions, please be mindful of how the function inputs correspond to the data you are trying to pull. 
 
 ## Requirements
 
 To interact with this API, a few packages must be installed. 
-* `jsonlite`: Works with JSON in R and is useful for parsing data and interacting with a web API.
-* `httr`: Provides useful tools for working with HTTP.
-* `tidyverse`: Collection of R packages that contribute heavily to API interaction and data visualization.
-* `knitr`: Provides tools for dynamic reporting in R.
-* `dplyr`: Package that provides tools for working with data frames.
-* `ggplot2`: Powerful for complex data visualizations.
++ `jsonlite`: Works with JSON in R and is useful for parsing data and interacting with a web API.
++ `httr`: Provides useful tools for working with HTTP.
++ `tidyverse`: Collection of R packages that contribute heavily to API interaction and data visualization.
++ `knitr`: Provides tools for dynamic reporting in R.
++ `dplyr`: Package that provides tools for working with data frames.
++ `ggplot2`: Powerful for complex data visualizations.
 
 
 ```{r libraries, message=FALSE, warning=FALSE}

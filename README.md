@@ -12,25 +12,26 @@ Supro Debnath
     -   [`The Original 151: Kanto Region`](#the-original-151-kanto-region)
     -   [`The Childhood Favorite: Hoenn Region`](#the-childhood-favorite-hoenn-region)
     -   [`The People's Champ: Sinnoh Region`](#the-peoples-champ-sinnoh-region)
+-   [Conclusion/Future Expectations](#conclusionfuture-expectations)
 
 This vignette is a step-by-step guide to interacting with the
 [pokeAPI](https://pokeapi.co/docs/v2). There are a few functions in here
 that explore the data present, as well as some visualizations that
-highlight interesting patterns in the world of pokemon. Most of the ids
-are represented as numeric (i.e. `Generation 1` referring to the Kanto
+highlight interesting patterns in the world of pokemon. The ids are
+represented as numeric (i.e. `Generation 1` referring to the Kanto
 pokemon, or `Type 3` referring to the `Flying` type). For that reason,
 if you intend on using any of these functions, please be mindful of how
 the function inputs correspond to the data you are trying to pull.
 
 ## Requirements
 
-To interact with this API, a few packages must be installed. 1.
-jsonlite: Works with JSON in R and is useful for parsing data and
-interacting with a web API. 2. httr: Provides useful tools for working
-with HTTP. 3. tidyverse: Collection of R packages that contribute
-heavily to API interaction and data visualization. 4. knitr: Provides
-tools for dynamic reporting in R. 5. dplyr: Package that provides tools
-for working with data frames. 6. ggplot2: Powerful for complex data
+To interact with this API, a few packages must be installed. -
+`jsonlite`: Works with JSON in R and is useful for parsing data and
+interacting with a web API. - `httr`: Provides useful tools for working
+with HTTP. - `tidyverse`: Collection of R packages that contribute
+heavily to API interaction and data visualization. - `knitr`: Provides
+tools for dynamic reporting in R. - `dplyr`: Package that provides tools
+for working with data frames. - `ggplot2`: Powerful for complex data
 visualizations.
 
 ``` r
@@ -240,20 +241,20 @@ kanto <- kanto %>% mutate(totalstats = hp+attack+defense+special.attack+special.
 head(kanto)
 ```
 
-    ##         name pokedex_id         type  ability weight hp attack defense special.attack special.defense speed
-    ## 1  bulbasaur          1 grass/poison overgrow     69 45     49      49             65              65    45
-    ## 2    ivysaur          2 grass/poison overgrow    130 60     62      63             80              80    60
-    ## 3   venusaur          3 grass/poison overgrow   1000 80     82      83            100             100    80
-    ## 4 charmander          4         fire    blaze     85 39     52      43             60              50    65
-    ## 5 charmeleon          5         fire    blaze    190 58     64      58             80              65    80
-    ## 6  charizard          6  fire/flying    blaze    905 78     84      78            109              85   100
-    ##   catch_rate_pct totalstats
-    ## 1             18        318
-    ## 2             18        405
-    ## 3             18        525
-    ## 4             18        309
-    ## 5             18        405
-    ## 6             18        534
+    ##         name pokedex_id         type  ability weight hp attack defense special.attack special.defense
+    ## 1  bulbasaur          1 grass/poison overgrow     69 45     49      49             65              65
+    ## 2    ivysaur          2 grass/poison overgrow    130 60     62      63             80              80
+    ## 3   venusaur          3 grass/poison overgrow   1000 80     82      83            100             100
+    ## 4 charmander          4         fire    blaze     85 39     52      43             60              50
+    ## 5 charmeleon          5         fire    blaze    190 58     64      58             80              65
+    ## 6  charizard          6  fire/flying    blaze    905 78     84      78            109              85
+    ##   speed catch_rate_pct totalstats
+    ## 1    45             18        318
+    ## 2    60             18        405
+    ## 3    80             18        525
+    ## 4    65             18        309
+    ## 5    80             18        405
+    ## 6   100             18        534
 
 With our data loaded, I now want to look at the top 25 strongest pokemon
 from this generation by total stats. While I anticipate most of the
@@ -293,6 +294,37 @@ plot3
 
 ![](README_files/figure-gfm/kanto%20total%20stat-1.png)<!-- -->
 
+Let’s grab a numerical summary of this `totalstats` breakdown by type.
+
+``` r
+kanto %>% group_by(type) %>% summarise(avg = round(mean(totalstats)), med = median(totalstats), var = round(var(totalstats)))
+```
+
+    ## # A tibble: 38 × 4
+    ##    type              avg   med   var
+    ##    <chr>           <dbl> <dbl> <dbl>
+    ##  1 bug               300  205  30025
+    ##  2 bug/flying        448  448.  5512
+    ##  3 bug/grass         345  345   7200
+    ##  4 bug/poison        310  305  12775
+    ##  5 dragon            360  360   7200
+    ##  6 dragon/flying     600  600     NA
+    ##  7 electric          440  488.  8150
+    ##  8 electric/flying   580  580     NA
+    ##  9 electric/steel    395  395   9800
+    ## 10 fairy             403  403  12800
+    ## # … with 28 more rows
+
+``` r
+summary(kanto$totalstats)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   195.0   320.0   405.0   407.6   490.0   680.0
+
+There are some types with “NA” since there is only one pokemon of that
+type.
+
 Next, we want to look at the typing breakdown and the count of each in
 the entire set of 151 pokemon.
 
@@ -305,7 +337,7 @@ plot4
 
 There are an absurd number of water-type pokemon, with a few other types
 having high counts compared to the rest. I want to see the spread of
-`totalstat` by type and see which types are better overall for stats.
+`totalstats` by type and see which types are better overall for stats.
 
 ``` r
 kanto_spread <- filter(kanto, type == 'water' | type == 'normal' | type == 'poison' | type == 'fire' | type == 'grass/poison')
@@ -394,20 +426,20 @@ hoenn <- hoenn %>% mutate(totalstats = hp+attack+defense+special.attack+special.
 head(hoenn)
 ```
 
-    ##        name pokedex_id          type  ability weight hp attack defense special.attack special.defense speed
-    ## 1   treecko        252         grass overgrow     50 40     45      35             65              55    70
-    ## 2   grovyle        253         grass overgrow    216 50     65      45             85              65    95
-    ## 3  sceptile        254         grass overgrow    522 70     85      65            105              85   120
-    ## 4   torchic        255          fire    blaze     25 45     60      40             70              50    45
-    ## 5 combusken        256 fire/fighting    blaze    195 60     85      60             85              60    55
-    ## 6  blaziken        257 fire/fighting    blaze    520 80    120      70            110              70    80
-    ##   catch_rate_pct totalstats
-    ## 1             18        310
-    ## 2             18        405
-    ## 3             18        530
-    ## 4             18        310
-    ## 5             18        405
-    ## 6             18        530
+    ##        name pokedex_id          type  ability weight hp attack defense special.attack special.defense
+    ## 1   treecko        252         grass overgrow     50 40     45      35             65              55
+    ## 2   grovyle        253         grass overgrow    216 50     65      45             85              65
+    ## 3  sceptile        254         grass overgrow    522 70     85      65            105              85
+    ## 4   torchic        255          fire    blaze     25 45     60      40             70              50
+    ## 5 combusken        256 fire/fighting    blaze    195 60     85      60             85              60
+    ## 6  blaziken        257 fire/fighting    blaze    520 80    120      70            110              70
+    ##   speed catch_rate_pct totalstats
+    ## 1    70             18        310
+    ## 2    95             18        405
+    ## 3   120             18        530
+    ## 4    45             18        310
+    ## 5    55             18        405
+    ## 6    80             18        530
 
 Let’s look at the strongest pokemon. As always, legendaries will be a
 good portion of the list, but let’s see if there are any surprising
@@ -427,7 +459,7 @@ Rayquaza being the strongest legendary and pokemon overall. There are a
 lot higher total stat numbers with this generation than in Kanto, but
 the craziest find was that Slaking, a very common pokemon, has the
 second highest total stat count. We’ll dive in further by looking at the
-`catch rate`.
+`catch_rate`.
 
 ``` r
 plot9 <- ggplot(hoenn_strongest, aes(x=name, y=catch_rate_pct, fill=type)) + geom_bar(stat='identity') + coord_flip() + ggtitle("Strongest Hoenn Pokemon Catch Rate") + xlab("Pokemon Name") + ylab("Catch Rate %") + theme(plot.title = element_text(hjust = 0.5))
@@ -436,10 +468,10 @@ plot9
 
 ![](README_files/figure-gfm/hoenn%20catch%20rate-1.png)<!-- -->
 
-`Slaking` actually has a relatively decent `catch rate`, while pokemon
-like `Milotic`, `Claydol`, and `Wailord` are pretty high in `catch rate`
+`Slaking` actually has a relatively decent `catch_rate`, while pokemon
+like `Milotic`, `Claydol`, and `Wailord` are pretty high in `catch_rate`
 compared to the rest of the list (makes sense, since a good number of
-those pokemon are legendaries. Let’s look at the `totalstat` breakdown
+those pokemon are legendaries. Let’s look at the `totalstats` breakdown
 across all these pokemon.
 
 ``` r
@@ -452,7 +484,39 @@ plot10
 ![](README_files/figure-gfm/hoenn%20type-1.png)<!-- -->
 
 Compared to Kanto, the Hoenn region has pokemon with higher overall
-stats. Lets check out the typing breakdown. Next, we want to look at the
+stats. Lets check out the breakdown of `totalstats` once again, as well
+as checking the overall summary of `totalstats`.
+
+``` r
+hoenn %>% group_by(type) %>% summarise(avg = round(mean(totalstats)), med = median(totalstats), var = round(var(totalstats)))
+```
+
+    ## # A tibble: 48 × 4
+    ##    type            avg   med   var
+    ##    <chr>         <dbl> <dbl> <dbl>
+    ##  1 bug             293   205 15658
+    ##  2 bug/flying      435   454  1201
+    ##  3 bug/ghost       236   236    NA
+    ##  4 bug/ground      266   266    NA
+    ##  5 bug/poison      385   385    NA
+    ##  6 bug/water       269   269    NA
+    ##  7 dark            368   420 17008
+    ##  8 dark/ghost      380   380    NA
+    ##  9 dragon          360   360  7200
+    ## 10 dragon/flying   590   600  9100
+    ## # … with 38 more rows
+
+``` r
+summary(hoenn$totalstats)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   190.0   303.5   410.0   403.7   475.0   680.0
+
+There’s a lower average for `totalstats` in Hoenn compared to Kanto, but
+a higher median.
+
+Now, lets check out the typing breakdown. Next, we want to look at the
 typing breakdown and the count of each in the entire set of 151 pokemon.
 
 ``` r
@@ -550,20 +614,20 @@ sinnoh <- sinnoh %>% mutate(totalstats = hp+attack+defense+special.attack+specia
 head(sinnoh)
 ```
 
-    ##        name pokedex_id          type  ability weight hp attack defense special.attack special.defense speed
-    ## 1   turtwig        387         grass overgrow    102 55     68      64             45              55    31
-    ## 2    grotle        388         grass overgrow    970 75     89      85             55              65    36
-    ## 3  torterra        389  grass/ground overgrow   3100 95    109     105             75              85    56
-    ## 4  chimchar        390          fire    blaze     62 44     58      44             58              44    61
-    ## 5  monferno        391 fire/fighting    blaze    220 64     78      52             78              52    81
-    ## 6 infernape        392 fire/fighting    blaze    550 76    104      71            104              71   108
-    ##   catch_rate_pct totalstats
-    ## 1             18        318
-    ## 2             18        405
-    ## 3             18        525
-    ## 4             18        309
-    ## 5             18        405
-    ## 6             18        534
+    ##        name pokedex_id          type  ability weight hp attack defense special.attack special.defense
+    ## 1   turtwig        387         grass overgrow    102 55     68      64             45              55
+    ## 2    grotle        388         grass overgrow    970 75     89      85             55              65
+    ## 3  torterra        389  grass/ground overgrow   3100 95    109     105             75              85
+    ## 4  chimchar        390          fire    blaze     62 44     58      44             58              44
+    ## 5  monferno        391 fire/fighting    blaze    220 64     78      52             78              52
+    ## 6 infernape        392 fire/fighting    blaze    550 76    104      71            104              71
+    ##   speed catch_rate_pct totalstats
+    ## 1    31             18        318
+    ## 2    36             18        405
+    ## 3    56             18        525
+    ## 4    61             18        309
+    ## 5    81             18        405
+    ## 6   108             18        534
 
 Let’s look at the strongest pokemon. As always, legendaries will be a
 good portion of the list, but let’s see if there are any surprising
@@ -593,7 +657,7 @@ plot16
 ![](README_files/figure-gfm/sinnoh%20catch%20rate-1.png)<!-- -->
 
 Interestingly, `Probopass` and `Hippowdon` are the two pokemon with the
-highest `catch rate`. Let’s look at the `totalstat` spread.
+highest `catch_rate`. Let’s look at the `totalstats` spread.
 
 ``` r
 plot17 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram() + xlab("Total Stats") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
@@ -603,6 +667,35 @@ plot17
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
 ![](README_files/figure-gfm/sinnoh%20type-1.png)<!-- -->
+
+``` r
+sinnoh %>% group_by(type) %>% summarise(avg = round(mean(totalstats)), med = median(totalstats), var = round(var(totalstats)))
+```
+
+    ## # A tibble: 48 × 4
+    ##    type             avg   med   var
+    ##    <chr>          <dbl> <dbl> <dbl>
+    ##  1 bug              267   224 10433
+    ##  2 bug/flying       414   449 14267
+    ##  3 bug/grass        424   424    NA
+    ##  4 dark             600   600    NA
+    ##  5 dark/flying      505   505    NA
+    ##  6 dark/ice         510   510    NA
+    ##  7 dragon/ground    437   410 23033
+    ##  8 electric         419   405 13281
+    ##  9 electric/ghost   440   440    NA
+    ## 10 electric/steel   535   535    NA
+    ## # … with 38 more rows
+
+``` r
+summary(sinnoh$totalstats)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   194.0   337.0   480.0   445.8   525.0   720.0
+
+Compared to the other two generations, the mean and median `totalstats`
+for Sinnoh is a lot higher.
 
 There’s a bit of a higher concentration of pokemon in the 400-500 range,
 whereas in Hoenn there were more pokemon in the 300-400 range. Again,
@@ -655,3 +748,19 @@ plot22
 ```
 
 ![](README_files/figure-gfm/speed%20sinnoh-1.png)<!-- -->
+
+## Conclusion/Future Expectations
+
+While I did find certain pokemon to be stronger than others, I still
+don’t hae enough information to adequately say which pokemon are “the
+strongest”. I focused in on the types of pokemon that were most
+prevalent, and their `totalstats` spreads, but I did not look into type
+combinations that were less in number but could have had a more
+extensive skillset or higher overall stats. Legendaries of course were
+the strongest, but pokemon such as `Slaking`, a `Normal` type pokemon
+that anyone can catch in its base form, was second-strongest in
+`Generation 3`, only trailing `Rayquaza`, which is one of the strongest
+pokemon ever introduced. In the future, I would like to come up with
+some kind of calculation incorporating `capture_rate`, `totalstats`, and
+another variable `encounter_rate`, that can give a base metric on which
+pokemon are must-haves based on the generation.

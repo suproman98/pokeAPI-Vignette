@@ -4,17 +4,17 @@ author: "Supro Debnath"
 date: '2022-06-18'
 ---
 
-This vignette is a step-by-step guide to interacting with the [pokeAPI](https://pokeapi.co/docs/v2). There are a few functions in here that explore the data present, as well as some visualizations that highlight interesting patterns in the world of pokemon. Most of the ids are represented as numeric (i.e. `Generation 1` referring to the Kanto pokemon, or `Type 3` referring to the `Flying` type). For that reason, if you intend on using any of these functions, please be mindful of how the function inputs correspond to the data you are trying to pull. 
+This vignette is a step-by-step guide to interacting with the [pokeAPI](https://pokeapi.co/docs/v2). There are a few functions in here that explore the data present, as well as some visualizations that highlight interesting patterns in the world of pokemon. The ids are represented as numeric (i.e. `Generation 1` referring to the Kanto pokemon, or `Type 3` referring to the `Flying` type). For that reason, if you intend on using any of these functions, please be mindful of how the function inputs correspond to the data you are trying to pull. 
 
 ## Requirements
 
 To interact with this API, a few packages must be installed. 
-+`jsonlite`: Works with JSON in R and is useful for parsing data and interacting with a web API.
-+`httr`: Provides useful tools for working with HTTP.
-+`tidyverse`: Collection of R packages that contribute heavily to API interaction and data visualization.
-+`knitr`: Provides tools for dynamic reporting in R.
-+`dplyr`: Package that provides tools for working with data frames.
-+`ggplot2`: Powerful for complex data visualizations.
+- `jsonlite`: Works with JSON in R and is useful for parsing data and interacting with a web API.
+- `httr`: Provides useful tools for working with HTTP.
+- `tidyverse`: Collection of R packages that contribute heavily to API interaction and data visualization.
+- `knitr`: Provides tools for dynamic reporting in R.
+- `dplyr`: Package that provides tools for working with data frames.
+- `ggplot2`: Powerful for complex data visualizations.
 
 
 ```{r libraries, message=FALSE, warning=FALSE}
@@ -217,12 +217,22 @@ plot2 <- ggplot(kanto_strongest, aes(x=name, y=catch_rate_pct, fill=type)) + geo
 plot2
 ```
 
-
 All three starters are present, though Charizard has a slight edge. After looking at the typing and the Pokemon included, I wanted to see the spread of total stats, seeing whether the most common Pokemon total stat number was.
 ```{r kanto total stat}
 plot3 <- ggplot(kanto, aes(x=totalstats)) + geom_histogram() + ggtitle("Total Stat Spread") + xlab("Total Stats") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
 plot3
 ```
+
+Let's grab a numerical summary of this `totalstats` breakdown by type. 
+```{r}
+kanto %>% group_by(type) %>% summarise(avg = round(mean(totalstats)), med = median(totalstats), var = round(var(totalstats)))
+```
+
+```{r}
+summary(kanto$totalstats)
+```
+
+There are some types with "NA" since there is only one pokemon of that type. 
 
 Next, we want to look at the typing breakdown and the count of each in the entire set of 151 pokemon. 
 ```{r kanto type count}
@@ -230,7 +240,7 @@ plot4 <- ggplot(kanto, aes(x=type, fill=type))  + geom_bar() + coord_flip() + gg
 plot4
 ```
 
-There are an absurd number of water-type pokemon, with a few other types having high counts compared to the rest. I want to see the spread of `totalstat` by type and see which types are better overall for stats.
+There are an absurd number of water-type pokemon, with a few other types having high counts compared to the rest. I want to see the spread of `totalstats` by type and see which types are better overall for stats.
 ```{r specific kanto types}
 kanto_spread <- filter(kanto, type == 'water' | type == 'normal' | type == 'poison' | type == 'fire' | type == 'grass/poison')
 
@@ -246,7 +256,6 @@ knitr::kable(table1, format = "pipe", caption = "Power of Fire Moves by PP")
 ```
 
 There are a wide assortment of fire moves with power over 100. With the total stats being high, as well as the move strength being high on average as well, lets take a look at some individual stats.
-
 
 "A strong defense is the best offense" is most commonly stated, and in this case there is somewhat of a relationship between the two.
 ```{r attack v defense kanto, message=FALSE, warning=FALSE}
@@ -280,19 +289,29 @@ plot8 <- ggplot(hoenn_strongest, aes(x=name, y=totalstats, fill=type)) + geom_ba
 plot8
 ```
 
-The three starters are present (Blaziken, Sceptile, and Swampert), with Rayquaza being the strongest legendary and pokemon overall. There are a lot higher total stat numbers with this generation than in Kanto, but the craziest find was that Slaking, a very common pokemon, has the second highest total stat count. We'll dive in further by looking at the `catch rate`.
+The three starters are present (Blaziken, Sceptile, and Swampert), with Rayquaza being the strongest legendary and pokemon overall. There are a lot higher total stat numbers with this generation than in Kanto, but the craziest find was that Slaking, a very common pokemon, has the second highest total stat count. We'll dive in further by looking at the `catch_rate`.
 ```{r hoenn catch rate}
 plot9 <- ggplot(hoenn_strongest, aes(x=name, y=catch_rate_pct, fill=type)) + geom_bar(stat='identity') + coord_flip() + ggtitle("Strongest Hoenn Pokemon Catch Rate") + xlab("Pokemon Name") + ylab("Catch Rate %") + theme(plot.title = element_text(hjust = 0.5))
 plot9
 ```
 
-`Slaking` actually has a relatively decent `catch rate`, while pokemon like `Milotic`, `Claydol`, and `Wailord` are pretty high in `catch rate` compared to the rest of the list (makes sense, since a good number of those pokemon are legendaries. Let's look at the `totalstat` breakdown across all these pokemon.
+`Slaking` actually has a relatively decent `catch_rate`, while pokemon like `Milotic`, `Claydol`, and `Wailord` are pretty high in `catch_rate` compared to the rest of the list (makes sense, since a good number of those pokemon are legendaries. Let's look at the `totalstats` breakdown across all these pokemon.
 ```{r hoenn type}
 plot10 <- ggplot(hoenn, aes(x=totalstats)) + geom_histogram() + ggtitle("Total Stat Spread") + xlab("Total Stats") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
 plot10
 ```
 
-Compared to Kanto, the Hoenn region has pokemon with higher overall stats. Lets check out the typing breakdown. Next, we want to look at the typing breakdown and the count of each in the entire set of 151 pokemon. 
+Compared to Kanto, the Hoenn region has pokemon with higher overall stats. Lets check out the breakdown of `totalstats` once again, as well as checking the overall summary of `totalstats`.
+```{r}
+hoenn %>% group_by(type) %>% summarise(avg = round(mean(totalstats)), med = median(totalstats), var = round(var(totalstats)))
+```
+
+```{r}
+summary(hoenn$totalstats)
+```
+There's a lower average for `totalstats` in Hoenn compared to Kanto, but a higher median.
+
+Now, lets check out the typing breakdown. Next, we want to look at the typing breakdown and the count of each in the entire set of 151 pokemon. 
 ```{r hoenn type count}
 plot11 <- ggplot(hoenn, aes(x=type, fill=type)) + geom_bar() + coord_flip() + ggtitle("Hoenn Type Combinations") + xlab("Types") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
 plot11
@@ -349,11 +368,20 @@ plot16 <- ggplot(sinnoh_strongest, aes(x=name, y=catch_rate_pct, fill=type)) + g
 plot16
 ```
 
-Interestingly, `Probopass` and `Hippowdon` are the two pokemon with the highest `catch rate`. Let's look at the `totalstat` spread.
+Interestingly, `Probopass` and `Hippowdon` are the two pokemon with the highest `catch_rate`. Let's look at the `totalstats` spread.
 ```{r sinnoh type}
 plot17 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram() + xlab("Total Stats") + ylab("Count") + theme(plot.title = element_text(hjust = 0.5))
 plot17
 ```
+
+```{r}
+sinnoh %>% group_by(type) %>% summarise(avg = round(mean(totalstats)), med = median(totalstats), var = round(var(totalstats)))
+```
+
+```{r}
+summary(sinnoh$totalstats)
+```
+Compared to the other two generations, the mean and median `totalstats` for Sinnoh is a lot higher.
 
 There's a bit of a higher concentration of pokemon in the 400-500 range, whereas in Hoenn there were more pokemon in the 300-400 range. Again, this can be because of the higher proportion of legendary pokemon.
 
@@ -387,3 +415,6 @@ plot22 <- ggplot(sinnoh_spread, aes(x=type, y=speed, fill=type)) + geom_boxplot(
 plot22
 ```
 
+## Conclusion/Future Expectations
+
+While I did find certain pokemon to be stronger than others, I still don't hae enough information to adequately say which pokemon are "the strongest". I focused in on the types of pokemon that were most prevalent, and their `totalstats` spreads, but I did not look into type combinations that were less in number but could have had a more extensive skillset or higher overall stats. Legendaries of course were the strongest, but pokemon such as `Slaking`, a `Normal` type pokemon that anyone can catch in its base form, was second-strongest in `Generation 3`, only trailing `Rayquaza`, which is one of the strongest pokemon ever introduced. In the future, I would like to come up with some kind of calculation incorporating `capture_rate`, `totalstats`, and another variable `encounter_rate`, that can give a base metric on which pokemon are must-haves based on the generation.

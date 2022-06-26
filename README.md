@@ -25,14 +25,16 @@ the function inputs correspond to the data you are trying to pull.
 
 ## Requirements
 
-To interact with this API, a few packages must be installed. -
-`jsonlite`: Works with JSON in R and is useful for parsing data and
-interacting with a web API. - `httr`: Provides useful tools for working
-with HTTP. - `tidyverse`: Collection of R packages that contribute
-heavily to API interaction and data visualization. - `knitr`: Provides
-tools for dynamic reporting in R. - `dplyr`: Package that provides tools
-for working with data frames. - `ggplot2`: Powerful for complex data
-visualizations.
+To interact with this API, a few packages must be installed.
+
+-   `jsonlite`: Works with JSON in R and is useful for parsing data and
+    interacting with a web API.
+-   `httr`: Provides useful tools for working with HTTP.
+-   `tidyverse`: Collection of R packages that contribute heavily to API
+    interaction and data visualization.
+-   `knitr`: Provides tools for dynamic reporting in R.
+-   `dplyr`: Package that provides tools for working with data frames.
+-   `ggplot2`: Powerful for complex data visualizations.
 
 ``` r
 library(jsonlite)
@@ -356,7 +358,7 @@ pokemon to learn.
 ``` r
 k_moves <- pokeAPI("type", 10)
 table1 <- table(k_moves$power, k_moves$pp)
-knitr::kable(table1, format = "pipe", caption = "Power of Fire Moves by PP")
+knitr::kable(table1, caption = "Power of Fire Moves by PP")
 ```
 
 |     |   1 |   5 |  10 |  15 |  20 |  25 |
@@ -547,7 +549,7 @@ into the available moves.
 ``` r
 h_moves <- pokeAPI("type", 10)
 table2 <- table(h_moves$power, k_moves$pp)
-knitr::kable(table2, format = "pipe", caption = "Power of Psychic Moves by PP")
+knitr::kable(table2, caption = "Power of Psychic Moves by PP")
 ```
 
 |     |   1 |   5 |  10 |  15 |  20 |  25 |
@@ -667,6 +669,9 @@ plot17
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
 ![](README_files/figure-gfm/sinnoh%20type-1.png)<!-- -->
+
+Once more, we’ll look at the breakdown of `totalstats` in Sinnoh by
+type, as well as overall summary.
 
 ``` r
 sinnoh %>% group_by(type) %>% summarise(avg = round(mean(totalstats)), med = median(totalstats), var = round(var(totalstats)))

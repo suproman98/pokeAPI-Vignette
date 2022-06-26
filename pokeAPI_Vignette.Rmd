@@ -8,7 +8,8 @@ This vignette is a step-by-step guide to interacting with the [pokeAPI](https://
 
 ## Requirements
 
-To interact with this API, a few packages must be installed. 
+To interact with this API, a few packages must be installed.
+
 - `jsonlite`: Works with JSON in R and is useful for parsing data and interacting with a web API.
 - `httr`: Provides useful tools for working with HTTP.
 - `tidyverse`: Collection of R packages that contribute heavily to API interaction and data visualization.
@@ -252,7 +253,7 @@ It looks like on average, fire type pokemon are overall stronger and will have h
 ```{r kanto fire moves, warning=FALSE}
 k_moves <- pokeAPI("type", 10)
 table1 <- table(k_moves$power, k_moves$pp)
-knitr::kable(table1, format = "pipe", caption = "Power of Fire Moves by PP")
+knitr::kable(table1, caption = "Power of Fire Moves by PP")
 ```
 
 There are a wide assortment of fire moves with power over 100. With the total stats being high, as well as the move strength being high on average as well, lets take a look at some individual stats.
@@ -329,7 +330,7 @@ plot12
 ```{r hoenn psychic moves, warning=FALSE}
 h_moves <- pokeAPI("type", 10)
 table2 <- table(h_moves$power, k_moves$pp)
-knitr::kable(table2, format = "pipe", caption = "Power of Psychic Moves by PP")
+knitr::kable(table2, caption = "Power of Psychic Moves by PP")
 ```
 
 It seems that there are also a strong assortment of psychic moves for the pokemon in this generation (and by extension, all generations), to use. The types listed (specifically `Psychic` and `Bug`) have more of a benefit with high `special attack`, and pokemon that are usually battling against these types want high `special defense`. Let's check to see the correlation between the two.
@@ -374,6 +375,7 @@ plot17 <- ggplot(hoenn, aes(x=totalstats))  + geom_histogram() + xlab("Total Sta
 plot17
 ```
 
+Once more, we'll look at the breakdown of `totalstats` in Sinnoh by type, as well as overall summary.
 ```{r}
 sinnoh %>% group_by(type) %>% summarise(avg = round(mean(totalstats)), med = median(totalstats), var = round(var(totalstats)))
 ```
